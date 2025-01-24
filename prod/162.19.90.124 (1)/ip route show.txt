@@ -1,0 +1,15 @@
+default via 100.64.0.1 dev public-bond0 proto static metric 100 
+10.0.10.8/29 dev br-prom-agent proto kernel scope link src 10.0.10.9 
+10.0.27.0/28 dev br-nextcloud proto kernel scope link src 10.0.27.1 linkdown 
+10.0.63.8/29 dev br-dawantv proto kernel scope link src 10.0.63.9 linkdown 
+10.0.72.8/29 dev br-ha.c.e proto kernel scope link src 10.0.72.9 
+10.0.164.8/29 dev br-formateur proto kernel scope link src 10.0.164.9 
+10.0.166.0/24 dev br-proxy-tier proto kernel scope link src 10.0.166.1 
+10.1.1.0/24 dev private-bond0 proto kernel scope link src 10.1.1.1 
+10.1.2.0/24 dev private-bond0 proto kernel scope link src 10.1.2.1 
+10.1.3.0/24 dev private-bond0 proto kernel scope link src 10.1.3.1 
+100.64.0.1 via 162.19.90.124 dev public-bond0 proto static scope link metric 100 
+162.19.90.0/24 dev public-bond0 proto kernel scope link src 162.19.90.124 
+169.254.0.0/16 dev private-bond0 proto kernel scope link src 169.254.113.169 metric 2048 
+172.17.0.0/16 dev docker0 proto kernel scope link src 172.17.0.1 linkdown 
+192.168.199.0/24 dev private-bond0.9 proto kernel scope link src 192.168.199.100

@@ -1,0 +1,178 @@
+NAME                  FSTYPE            FSVER            LABEL       UUID                                   FSAVAIL FSUSE% MOUNTPOINTS
+loop0                 squashfs          4.0                                                                       0   100% /snap/core20/2379
+loop1                 squashfs          4.0                                                                       0   100% /snap/core20/2434
+loop2                 squashfs          4.0                                                                       0   100% /snap/lxd/29351
+loop3                 squashfs          4.0                                                                       0   100% /snap/lxd/31333
+loop5                 squashfs          4.0                                                                       0   100% /snap/snapd/23258
+loop6                                                                                                             0   100% /snap/snapd/23545
+sda                                                                                                                        
+├─sda1                vfat              FAT16            EFI_SYSPART 6BBA-B32E                               510.4M     0% /boot/efi
+├─sda2                linux_raid_member 1.2              md2         2c1067e8-38ad-e3e2-3aad-80dbf9080bf9                  
+│ └─md2               ext4              1.0              boot        f07f7cb4-b83e-4c91-8f87-b688cc4ca42a    674.9M    25% /boot
+├─sda3                linux_raid_member 1.2              md3         ceb17574-c3d9-5111-7036-7817065b0f61                  
+│ └─md3               ext4              1.0              root        a3bf9fb7-6002-470f-bc59-bc0f8325eeda    366.2G    11% /var/lib/docker/volumes/proxy_certs/_data
+│                                                                                                                          /var/lib/docker/volumes/proxy_acme/_data
+│                                                                                                                          /
+├─sda4                swap              1                swap-sda4   62f80c68-3f49-47e7-bdf4-629b83089e5d                  [SWAP]
+└─sda5                iso9660           Joliet Extension config-2    2023-07-06-10-27-03-00                                
+sdb                                                                                                                        
+├─sdb1                vfat              FAT16            EFI_SYSPART 6BCA-0B96                                             
+├─sdb2                linux_raid_member 1.2              md2         2c1067e8-38ad-e3e2-3aad-80dbf9080bf9                  
+│ └─md2               ext4              1.0              boot        f07f7cb4-b83e-4c91-8f87-b688cc4ca42a    674.9M    25% /boot
+├─sdb3                linux_raid_member 1.2              md3         ceb17574-c3d9-5111-7036-7817065b0f61                  
+│ └─md3               ext4              1.0              root        a3bf9fb7-6002-470f-bc59-bc0f8325eeda    366.2G    11% /var/lib/docker/volumes/proxy_certs/_data
+│                                                                                                                          /var/lib/docker/volumes/proxy_acme/_data
+│                                                                                                                          /
+└─sdb4                swap              1                swap-sdb4   2b42a3fb-5159-4888-a25b-360a1ca384de                  [SWAP]
+nvme0n1               linux_raid_member 1.2              filer2:0    143458f7-d224-33f5-63ed-2991790be070                  
+└─md0                 LVM2_member       LVM2 001                     yY4v9K-FJdq-1CYI-udhd-gMWN-r40T-XwKQLp                
+  ├─10t-dawanfr       drbd              v09                          53ab5edc6fd1b3ed                                      
+  │ └─drbd11                                                                                                               
+  ├─10t-dawanorg      drbd              v09                          79cd19fad65a095                                       
+  │ └─drbd12                                                                                                               
+  ├─10t-jehannorg     drbd              v09                          915e026d0e513969                                      
+  │ └─drbd13                                                                                                               
+  ├─10t-dj--serverorg drbd              v09                          d9f7a14224f54dec                                      
+  │ └─drbd14                                                                                                               
+  ├─10t-dawantv       drbd              v09                          cea36d4b4268df8e                                      
+  │ └─drbd21                                                                                                 112.9G    18% /var/lib/docker/volumes/dawantv_dawantv-logs/_data
+  │                                                                                                                        /var/lib/docker/volumes/dawantv_dawantv-files/_data
+  │                                                                                                                        /var/lib/docker/volumes/dawantv_dblogs/_data
+  │                                                                                                                        /var/lib/docker/volumes/dawantv_dbdata/_data
+  │                                                                                                                        /drbd/dawantv/docker
+  ├─10t-nuage         drbd              v09                          ac6e8b71d7ad546c                                      
+  │ └─drbd22                                                                                                   3.6T     3% /var/lib/docker/volumes/nuage_document_log/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_document_data/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_config/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_apps/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_nextcloud/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_theme/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_data/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_db/_data
+  │                                                                                                                        /drbd/nuage/docker
+  └─10t-formateur     drbd              v09                          b4e08f9f906629ec                                      
+    └─drbd23                                                                                                   4.1G     9% /var/lib/docker/volumes/formateur_phplog/_data
+                                                                                                                           /var/lib/docker/volumes/formateur_formateur/_data
+                                                                                                                           /drbd/formateur/docker
+nvme1n1               linux_raid_member 1.2              filer2:0    143458f7-d224-33f5-63ed-2991790be070                  
+└─md0                 LVM2_member       LVM2 001                     yY4v9K-FJdq-1CYI-udhd-gMWN-r40T-XwKQLp                
+  ├─10t-dawanfr       drbd              v09                          53ab5edc6fd1b3ed                                      
+  │ └─drbd11                                                                                                               
+  ├─10t-dawanorg      drbd              v09                          79cd19fad65a095                                       
+  │ └─drbd12                                                                                                               
+  ├─10t-jehannorg     drbd              v09                          915e026d0e513969                                      
+  │ └─drbd13                                                                                                               
+  ├─10t-dj--serverorg drbd              v09                          d9f7a14224f54dec                                      
+  │ └─drbd14                                                                                                               
+  ├─10t-dawantv       drbd              v09                          cea36d4b4268df8e                                      
+  │ └─drbd21                                                                                                 112.9G    18% /var/lib/docker/volumes/dawantv_dawantv-logs/_data
+  │                                                                                                                        /var/lib/docker/volumes/dawantv_dawantv-files/_data
+  │                                                                                                                        /var/lib/docker/volumes/dawantv_dblogs/_data
+  │                                                                                                                        /var/lib/docker/volumes/dawantv_dbdata/_data
+  │                                                                                                                        /drbd/dawantv/docker
+  ├─10t-nuage         drbd              v09                          ac6e8b71d7ad546c                                      
+  │ └─drbd22                                                                                                   3.6T     3% /var/lib/docker/volumes/nuage_document_log/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_document_data/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_config/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_apps/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_nextcloud/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_theme/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_data/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_db/_data
+  │                                                                                                                        /drbd/nuage/docker
+  └─10t-formateur     drbd              v09                          b4e08f9f906629ec                                      
+    └─drbd23                                                                                                   4.1G     9% /var/lib/docker/volumes/formateur_phplog/_data
+                                                                                                                           /var/lib/docker/volumes/formateur_formateur/_data
+                                                                                                                           /drbd/formateur/docker
+nvme2n1               linux_raid_member 1.2              filer2:0    143458f7-d224-33f5-63ed-2991790be070                  
+└─md0                 LVM2_member       LVM2 001                     yY4v9K-FJdq-1CYI-udhd-gMWN-r40T-XwKQLp                
+  ├─10t-dawanfr       drbd              v09                          53ab5edc6fd1b3ed                                      
+  │ └─drbd11                                                                                                               
+  ├─10t-dawanorg      drbd              v09                          79cd19fad65a095                                       
+  │ └─drbd12                                                                                                               
+  ├─10t-jehannorg     drbd              v09                          915e026d0e513969                                      
+  │ └─drbd13                                                                                                               
+  ├─10t-dj--serverorg drbd              v09                          d9f7a14224f54dec                                      
+  │ └─drbd14                                                                                                               
+  ├─10t-dawantv       drbd              v09                          cea36d4b4268df8e                                      
+  │ └─drbd21                                                                                                 112.9G    18% /var/lib/docker/volumes/dawantv_dawantv-logs/_data
+  │                                                                                                                        /var/lib/docker/volumes/dawantv_dawantv-files/_data
+  │                                                                                                                        /var/lib/docker/volumes/dawantv_dblogs/_data
+  │                                                                                                                        /var/lib/docker/volumes/dawantv_dbdata/_data
+  │                                                                                                                        /drbd/dawantv/docker
+  ├─10t-nuage         drbd              v09                          ac6e8b71d7ad546c                                      
+  │ └─drbd22                                                                                                   3.6T     3% /var/lib/docker/volumes/nuage_document_log/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_document_data/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_config/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_apps/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_nextcloud/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_theme/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_data/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_db/_data
+  │                                                                                                                        /drbd/nuage/docker
+  └─10t-formateur     drbd              v09                          b4e08f9f906629ec                                      
+    └─drbd23                                                                                                   4.1G     9% /var/lib/docker/volumes/formateur_phplog/_data
+                                                                                                                           /var/lib/docker/volumes/formateur_formateur/_data
+                                                                                                                           /drbd/formateur/docker
+nvme3n1               linux_raid_member 1.2              filer2:0    143458f7-d224-33f5-63ed-2991790be070                  
+└─md0                 LVM2_member       LVM2 001                     yY4v9K-FJdq-1CYI-udhd-gMWN-r40T-XwKQLp                
+  ├─10t-dawanfr       drbd              v09                          53ab5edc6fd1b3ed                                      
+  │ └─drbd11                                                                                                               
+  ├─10t-dawanorg      drbd              v09                          79cd19fad65a095                                       
+  │ └─drbd12                                                                                                               
+  ├─10t-jehannorg     drbd              v09                          915e026d0e513969                                      
+  │ └─drbd13                                                                                                               
+  ├─10t-dj--serverorg drbd              v09                          d9f7a14224f54dec                                      
+  │ └─drbd14                                                                                                               
+  ├─10t-dawantv       drbd              v09                          cea36d4b4268df8e                                      
+  │ └─drbd21                                                                                                 112.9G    18% /var/lib/docker/volumes/dawantv_dawantv-logs/_data
+  │                                                                                                                        /var/lib/docker/volumes/dawantv_dawantv-files/_data
+  │                                                                                                                        /var/lib/docker/volumes/dawantv_dblogs/_data
+  │                                                                                                                        /var/lib/docker/volumes/dawantv_dbdata/_data
+  │                                                                                                                        /drbd/dawantv/docker
+  ├─10t-nuage         drbd              v09                          ac6e8b71d7ad546c                                      
+  │ └─drbd22                                                                                                   3.6T     3% /var/lib/docker/volumes/nuage_document_log/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_document_data/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_config/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_apps/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_nextcloud/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_theme/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_data/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_db/_data
+  │                                                                                                                        /drbd/nuage/docker
+  └─10t-formateur     drbd              v09                          b4e08f9f906629ec                                      
+    └─drbd23                                                                                                   4.1G     9% /var/lib/docker/volumes/formateur_phplog/_data
+                                                                                                                           /var/lib/docker/volumes/formateur_formateur/_data
+                                                                                                                           /drbd/formateur/docker
+nvme4n1               linux_raid_member 1.2              filer2:0    143458f7-d224-33f5-63ed-2991790be070                  
+└─md0                 LVM2_member       LVM2 001                     yY4v9K-FJdq-1CYI-udhd-gMWN-r40T-XwKQLp                
+  ├─10t-dawanfr       drbd              v09                          53ab5edc6fd1b3ed                                      
+  │ └─drbd11                                                                                                               
+  ├─10t-dawanorg      drbd              v09                          79cd19fad65a095                                       
+  │ └─drbd12                                                                                                               
+  ├─10t-jehannorg     drbd              v09                          915e026d0e513969                                      
+  │ └─drbd13                                                                                                               
+  ├─10t-dj--serverorg drbd              v09                          d9f7a14224f54dec                                      
+  │ └─drbd14                                                                                                               
+  ├─10t-dawantv       drbd              v09                          cea36d4b4268df8e                                      
+  │ └─drbd21                                                                                                 112.9G    18% /var/lib/docker/volumes/dawantv_dawantv-logs/_data
+  │                                                                                                                        /var/lib/docker/volumes/dawantv_dawantv-files/_data
+  │                                                                                                                        /var/lib/docker/volumes/dawantv_dblogs/_data
+  │                                                                                                                        /var/lib/docker/volumes/dawantv_dbdata/_data
+  │                                                                                                                        /drbd/dawantv/docker
+  ├─10t-nuage         drbd              v09                          ac6e8b71d7ad546c                                      
+  │ └─drbd22                                                                                                   3.6T     3% /var/lib/docker/volumes/nuage_document_log/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_document_data/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_config/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_apps/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_nextcloud/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_theme/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_data/_data
+  │                                                                                                                        /var/lib/docker/volumes/nuage_db/_data
+  │                                                                                                                        /drbd/nuage/docker
+  └─10t-formateur     drbd              v09                          b4e08f9f906629ec                                      
+    └─drbd23                                                                                                   4.1G     9% /var/lib/docker/volumes/formateur_phplog/_data
+                                                                                                                           /var/lib/docker/volumes/formateur_formateur/_data
+                                                                                                                           /drbd/formateur/docker
+nvme5n1               drbd              v09                          6a328c1b79f95b7b                                      
+└─drbd31

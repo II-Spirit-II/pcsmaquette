@@ -1,0 +1,219 @@
+Cluster Name: my_cluster
+Corosync Nodes:
+ 162.19.90.124 57.128.73.105
+Pacemaker Nodes:
+ 162.19.90.124 57.128.73.105
+
+Resources:
+ Resource: Filer1_additional_IP_drbd (class=ocf provider=heartbeat type=IPaddr2)
+  Attributes: cidr_netmask=32 ip=169.254.113.169 nic=private-bond0
+  Operations: monitor interval=30s (Filer1_additional_IP_drbd-monitor-interval-30s)
+              start interval=0s timeout=20s (Filer1_additional_IP_drbd-start-interval-0s)
+              stop interval=0s timeout=20s (Filer1_additional_IP_drbd-stop-interval-0s)
+ Resource: Filer2_additional_IP_drbd (class=ocf provider=heartbeat type=IPaddr2)
+  Attributes: cidr_netmask=32 ip=169.254.60.173 nic=private-bond0
+  Operations: monitor interval=30s (Filer2_additional_IP_drbd-monitor-interval-30s)
+              start interval=0s timeout=20s (Filer2_additional_IP_drbd-start-interval-0s)
+              stop interval=0s timeout=20s (Filer2_additional_IP_drbd-stop-interval-0s)
+ Resource: Filer2_additional_IP_nuage (class=ocf provider=heartbeat type=IPaddr2)
+  Attributes: cidr_netmask=32 ip=178.33.110.250 nic=public-bond0
+  Operations: monitor interval=30s (Filer2_additional_IP_nuage-monitor-interval-30s)
+              start interval=0s timeout=20s (Filer2_additional_IP_nuage-start-interval-0s)
+              stop interval=0s timeout=20s (Filer2_additional_IP_nuage-stop-interval-0s)
+ Resource: Filer2_additional_IP_dawantv (class=ocf provider=heartbeat type=IPaddr2)
+  Attributes: cidr_netmask=32 ip=178.32.117.50 nic=public-bond0
+  Operations: monitor interval=30s (Filer2_additional_IP_dawantv-monitor-interval-30s)
+              start interval=0s timeout=20s (Filer2_additional_IP_dawantv-start-interval-0s)
+              stop interval=0s timeout=20s (Filer2_additional_IP_dawantv-stop-interval-0s)
+ Resource: Filer2_additional_IP_formateur (class=ocf provider=heartbeat type=IPaddr2)
+  Attributes: cidr_netmask=32 ip=92.222.107.79 nic=public-bond0
+  Operations: monitor interval=30s (Filer2_additional_IP_formateur-monitor-interval-30s)
+              start interval=0s timeout=20s (Filer2_additional_IP_formateur-start-interval-0s)
+              stop interval=0s timeout=20s (Filer2_additional_IP_formateur-stop-interval-0s)
+ Clone: drbd_r1-clone
+  Meta Attrs: clone-max=2 clone-node-max=1 drbd_resource=r1 master-max=1 master-node-max=1 notify=true promotable=true
+  Resource: drbd_r1 (class=ocf provider=linbit type=drbd)
+   Attributes: drbd_resource=r1 ignore_missing_notifications=true
+   Operations: demote interval=0s timeout=90 (drbd_r1-demote-interval-0s)
+               monitor interval=20 role=Slave timeout=20 (drbd_r1-monitor-interval-20)
+               monitor interval=10 role=Master timeout=20 (drbd_r1-monitor-interval-10)
+               notify interval=0s timeout=90 (drbd_r1-notify-interval-0s)
+               promote interval=0s timeout=90 (drbd_r1-promote-interval-0s)
+               reload interval=0s timeout=30 (drbd_r1-reload-interval-0s)
+               start interval=0s timeout=240 (drbd_r1-start-interval-0s)
+               stop interval=0s timeout=100 (drbd_r1-stop-interval-0s)
+ Resource: fs_r1_11 (class=ocf provider=heartbeat type=Filesystem)
+  Attributes: device=/dev/drbd11 directory=/drbd/dawanfr/docker fstype=ext4
+  Operations: monitor interval=20s timeout=40s (fs_r1_11-monitor-interval-20s)
+              start interval=0s timeout=60s (fs_r1_11-start-interval-0s)
+              stop interval=0s timeout=60s (fs_r1_11-stop-interval-0s)
+ Resource: fs_r1_12 (class=ocf provider=heartbeat type=Filesystem)
+  Attributes: device=/dev/drbd12 directory=/drbd/dawanorg/docker fstype=ext4
+  Operations: monitor interval=20s timeout=40s (fs_r1_12-monitor-interval-20s)
+              start interval=0s timeout=60s (fs_r1_12-start-interval-0s)
+              stop interval=0s timeout=60s (fs_r1_12-stop-interval-0s)
+ Resource: fs_r1_13 (class=ocf provider=heartbeat type=Filesystem)
+  Attributes: device=/dev/drbd13 directory=/drbd/jehannorg/docker fstype=ext4
+  Operations: monitor interval=20s timeout=40s (fs_r1_13-monitor-interval-20s)
+              start interval=0s timeout=60s (fs_r1_13-start-interval-0s)
+              stop interval=0s timeout=60s (fs_r1_13-stop-interval-0s)
+ Resource: fs_r1_14 (class=ocf provider=heartbeat type=Filesystem)
+  Attributes: device=/dev/drbd14 directory=/drbd/dj-serverorg/docker fstype=ext4
+  Operations: monitor interval=20s timeout=40s (fs_r1_14-monitor-interval-20s)
+              start interval=0s timeout=60s (fs_r1_14-start-interval-0s)
+              stop interval=0s timeout=60s (fs_r1_14-stop-interval-0s)
+ Clone: drbd_r2-clone
+  Meta Attrs: clone-max=2 clone-node-max=1 drbd_resource=r2 master-max=1 master-node-max=1 notify=true promotable=true
+  Resource: drbd_r2 (class=ocf provider=linbit type=drbd)
+   Attributes: drbd_resource=r2 ignore_missing_notifications=true
+   Operations: demote interval=0s timeout=90 (drbd_r2-demote-interval-0s)
+               monitor interval=20 role=Slave timeout=20 (drbd_r2-monitor-interval-20)
+               monitor interval=10 role=Master timeout=20 (drbd_r2-monitor-interval-10)
+               notify interval=0s timeout=90 (drbd_r2-notify-interval-0s)
+               promote interval=0s timeout=90 (drbd_r2-promote-interval-0s)
+               reload interval=0s timeout=30 (drbd_r2-reload-interval-0s)
+               start interval=0s timeout=240 (drbd_r2-start-interval-0s)
+               stop interval=0s timeout=100 (drbd_r2-stop-interval-0s)
+ Resource: fs_r2_21 (class=ocf provider=heartbeat type=Filesystem)
+  Attributes: device=/dev/drbd21 directory=/drbd/dawantv/docker fstype=ext4
+  Operations: monitor interval=20s timeout=40s (fs_r2_21-monitor-interval-20s)
+              start interval=0s timeout=60s (fs_r2_21-start-interval-0s)
+              stop interval=0s timeout=60s (fs_r2_21-stop-interval-0s)
+ Resource: fs_r2_22 (class=ocf provider=heartbeat type=Filesystem)
+  Attributes: device=/dev/drbd22 directory=/drbd/nuage/docker fstype=ext4
+  Operations: monitor interval=20s timeout=40s (fs_r2_22-monitor-interval-20s)
+              start interval=0s timeout=60s (fs_r2_22-start-interval-0s)
+              stop interval=0s timeout=60s (fs_r2_22-stop-interval-0s)
+ Resource: fs_r2_23 (class=ocf provider=heartbeat type=Filesystem)
+  Attributes: device=/dev/drbd23 directory=/drbd/formateur/docker fstype=ext4
+  Operations: monitor interval=20s timeout=40s (fs_r2_23-monitor-interval-20s)
+              start interval=0s timeout=60s (fs_r2_23-start-interval-0s)
+              stop interval=0s timeout=60s (fs_r2_23-stop-interval-0s)
+ Clone: drbd_r3-clone
+  Meta Attrs: clone-max=2 clone-node-max=1 drbd_resource=r3 master-max=1 master-node-max=1 notify=true promotable=true
+  Resource: drbd_r3 (class=ocf provider=linbit type=drbd)
+   Attributes: drbd_resource=r3 ignore_missing_notifications=true
+   Operations: demote interval=0s timeout=90 (drbd_r3-demote-interval-0s)
+               monitor interval=20 role=Slave timeout=20 (drbd_r3-monitor-interval-20)
+               monitor interval=10 role=Master timeout=20 (drbd_r3-monitor-interval-10)
+               notify interval=0s timeout=90 (drbd_r3-notify-interval-0s)
+               promote interval=0s timeout=90 (drbd_r3-promote-interval-0s)
+               reload interval=0s timeout=30 (drbd_r3-reload-interval-0s)
+               start interval=0s timeout=240 (drbd_r3-start-interval-0s)
+               stop interval=0s timeout=100 (drbd_r3-stop-interval-0s)
+ Resource: iSCSI_tgt_r3 (class=ocf provider=heartbeat type=agent_tgt)
+  Operations: monitor interval=10s timeout=20s (iSCSI_tgt_r3-monitor-interval-10s)
+              start interval=0s timeout=20s (iSCSI_tgt_r3-start-interval-0s)
+              stop interval=0s timeout=20s (iSCSI_tgt_r3-stop-interval-0s)
+ Resource: r2_to_filer1 (class=ocf provider=heartbeat type=agent_failoverscript)
+  Attributes: script_path=/root/pcs/r2_to_filer1.sh
+  Operations: migrate_from interval=0s timeout=20s (r2_to_filer1-migrate_from-interval-0s)
+              migrate_to interval=0s timeout=20s (r2_to_filer1-migrate_to-interval-0s)
+              monitor interval=30s timeout=30s OCF_CHECK_LEVEL=0 (r2_to_filer1-monitor-interval-30s)
+              reload interval=0s timeout=20s (r2_to_filer1-reload-interval-0s)
+              start interval=0s timeout=20s (r2_to_filer1-start-interval-0s)
+              stop interval=0s timeout=20s (r2_to_filer1-stop-interval-0s)
+ Resource: r2_to_filer2 (class=ocf provider=heartbeat type=agent_failoverscript)
+  Attributes: script_path=/root/pcs/r2_to_filer2.sh
+  Operations: migrate_from interval=0s timeout=20s (r2_to_filer2-migrate_from-interval-0s)
+              migrate_to interval=0s timeout=20s (r2_to_filer2-migrate_to-interval-0s)
+              monitor interval=30s timeout=30s OCF_CHECK_LEVEL=0 (r2_to_filer2-monitor-interval-30s)
+              reload interval=0s timeout=20s (r2_to_filer2-reload-interval-0s)
+              start interval=0s timeout=20s (r2_to_filer2-start-interval-0s)
+              stop interval=0s timeout=20s (r2_to_filer2-stop-interval-0s)
+ Resource: DockerResource_R2 (class=ocf provider=heartbeat type=agent_docker_r2)
+  Operations: monitor interval=30s timeout=30s (DockerResource_R2-monitor-interval-30s)
+              start interval=0s timeout=60s (DockerResource_R2-start-interval-0s)
+              stop interval=0s timeout=60s (DockerResource_R2-stop-interval-0s)
+ Resource: Fail2BanResource (class=ocf provider=heartbeat type=agent_fail2ban)
+  Operations: monitor interval=10s (Fail2BanResource-monitor-interval-10s)
+              start interval=0s timeout=30s (Fail2BanResource-start-interval-0s)
+              stop interval=0s timeout=30s (Fail2BanResource-stop-interval-0s)
+
+Stonith Devices:
+ Resource: stonith_device (class=stonith type=fence_dummy)
+  Attributes: pcmk_host_list=57.128.73.105,162.19.90.124
+  Operations: monitor interval=60s (stonith_device-monitor-interval-60s)
+Fencing Levels:
+
+Location Constraints:
+  Resource: DockerResource_R2
+    Enabled on:
+      Node: 57.128.73.105 (score:100) (id:location-DockerResource_R2-57.128.73.105-100)
+  Resource: Fail2BanResource
+    Enabled on:
+      Node: 57.128.73.105 (score:100) (id:location-Fail2BanResource-57.128.73.105-100)
+  Resource: drbd_r1-clone
+    Enabled on:
+      Node: 162.19.90.124 (score:100) (id:location-drbd_r1-clone-162.19.90.124-100)
+  Resource: drbd_r2-clone
+    Enabled on:
+      Node: 57.128.73.105 (score:100) (id:location-drbd_r2-clone-57.128.73.105-100)
+  Resource: drbd_r3-clone
+    Enabled on:
+      Node: 162.19.90.124 (score:100) (id:location-drbd_r3-clone-162.19.90.124-100)
+  Resource: iSCSI_tgt_r3
+    Enabled on:
+      Node: 162.19.90.124 (score:100) (id:location-iSCSI_tgt_r3-162.19.90.124-100)
+  Resource: r2_to_filer1
+    Enabled on:
+      Node: 162.19.90.124 (score:100) (id:location-r2_to_filer1-162.19.90.124-100)
+  Resource: r2_to_filer2
+    Enabled on:
+      Node: 57.128.73.105 (score:100) (id:location-r2_to_filer2-57.128.73.105-100)
+  Resource: stonith_device
+    Enabled on:
+      Node: 162.19.90.124 (score:INFINITY) (id:location-stonith_device-162.19.90.124-INFINITY)
+Ordering Constraints:
+  promote drbd_r1-clone then start fs_r1_11 (kind:Mandatory) (id:order-drbd_r1-clone-fs_r1_11-mandatory)
+  promote drbd_r1-clone then start fs_r1_12 (kind:Mandatory) (id:order-drbd_r1-clone-fs_r1_12-mandatory)
+  promote drbd_r1-clone then start fs_r1_13 (kind:Mandatory) (id:order-drbd_r1-clone-fs_r1_13-mandatory)
+  promote drbd_r1-clone then start fs_r1_14 (kind:Mandatory) (id:order-drbd_r1-clone-fs_r1_14-mandatory)
+  promote drbd_r2-clone then start fs_r2_21 (kind:Mandatory) (id:order-drbd_r2-clone-fs_r2_21-mandatory)
+  promote drbd_r2-clone then start fs_r2_22 (kind:Mandatory) (id:order-drbd_r2-clone-fs_r2_22-mandatory)
+  promote drbd_r2-clone then start fs_r2_23 (kind:Mandatory) (id:order-drbd_r2-clone-fs_r2_23-mandatory)
+  promote drbd_r3-clone then start iSCSI_tgt_r3 (kind:Mandatory) (id:order-drbd_r3-clone-iSCSI_tgt_r3-mandatory)
+  promote drbd_r2-clone then start r2_to_filer1 (kind:Mandatory) (id:order-drbd_r2-clone-r2_to_filer1-mandatory)
+  demote drbd_r2-clone then start r2_to_filer2 (kind:Mandatory) (id:order-drbd_r2-clone-r2_to_filer2-mandatory)
+  promote drbd_r2-clone then start DockerResource_R2 (kind:Mandatory) (id:order-drbd_r2-clone-DockerResource_R2-mandatory)
+  stop DockerResource_R2 then stop fs_r2_22 (kind:Mandatory) (id:order-DockerResource_R2-fs_r2_22-Mandatory)
+  stop DockerResource_R2 then stop fs_r2_21 (kind:Mandatory) (id:order-DockerResource_R2-fs_r2_21-Mandatory)
+  start DockerResource_R2 then start Fail2BanResource (kind:Mandatory) (id:order-DockerResource_R2-Fail2BanResource-mandatory)
+Colocation Constraints:
+  fs_r1_11 with drbd_r1-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master) (id:colocation-fs_r1_11-drbd_r1-clone-INFINITY)
+  fs_r1_12 with drbd_r1-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master) (id:colocation-fs_r1_12-drbd_r1-clone-INFINITY)
+  fs_r1_13 with drbd_r1-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master) (id:colocation-fs_r1_13-drbd_r1-clone-INFINITY)
+  fs_r1_14 with drbd_r1-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master) (id:colocation-fs_r1_14-drbd_r1-clone-INFINITY)
+  fs_r2_21 with drbd_r2-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master) (id:colocation-fs_r2_21-drbd_r2-clone-INFINITY)
+  fs_r2_22 with drbd_r2-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master) (id:colocation-fs_r2_22-drbd_r2-clone-INFINITY)
+  fs_r2_23 with drbd_r2-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master) (id:colocation-fs_r2_23-drbd_r2-clone-INFINITY)
+  iSCSI_tgt_r3 with drbd_r3-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master) (id:colocation-iSCSI_tgt_r3-drbd_r3-clone-INFINITY)
+  Filer1_additional_IP_drbd with drbd_r1-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master) (id:colocation-Filer1_additional_IP_drbd-drbd_r1-clone-INFINITY)
+  Filer2_additional_IP_drbd with drbd_r2-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master) (id:colocation-Filer2_additional_IP_drbd-drbd_r2-clone-INFINITY)
+  Filer2_additional_IP_nuage with drbd_r2-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master) (id:colocation-Filer2_additional_IP_nuage-drbd_r2-clone-INFINITY)
+  Filer2_additional_IP_dawantv with drbd_r2-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master) (id:colocation-Filer2_additional_IP_dawantv-drbd_r2-clone-INFINITY)
+  Filer2_additional_IP_formateur with drbd_r2-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master) (id:colocation-Filer2_additional_IP_formateur-drbd_r2-clone-INFINITY)
+Ticket Constraints:
+
+Alerts:
+ No alerts defined
+
+Resources Defaults:
+  No defaults set
+Operations Defaults:
+  No defaults set
+
+Cluster Properties:
+ cluster-infrastructure: corosync
+ cluster-name: my_cluster
+ dc-version: 2.1.2-ada5c3b36e2
+ have-watchdog: false
+ last-lrm-refresh: 1731490888
+ stonith-action: off
+ stonith-enabled: true
+
+Tags:
+ No tags defined
+
+Quorum:
+  Options:

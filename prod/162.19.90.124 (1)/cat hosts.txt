@@ -1,0 +1,20 @@
+127.0.0.1	filer1.dawan.fr
+
+# The following lines are desirable for IPv6 capable hosts
+::1	ip6-localhost	ip6-loopback
+fe00::0	ip6-localnet
+ff00::0	ip6-mcastprefix
+ff02::1	ip6-allnodes
+ff02::2	ip6-allrouters
+ff02::3	ip6-allhosts
+
+162.19.90.124	filer1.dawan.fr	filer1
+57.128.73.105	filer2.dawan.fr	filer2
+
+104.117.77.242	r3.o.lencr.org
+104.117.77.210	r3.o.lencr.org
+
+127.0.1.1	filer1	filer1
+
+127.0.0.1 filer1-dawan-fr.srv.docker filer1
+127.0.1.1 filer1-dawan-fr.srv.docker filer1

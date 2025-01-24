@@ -1,0 +1,58 @@
+Location Constraints:
+  Resource: DockerResource_R2
+    Enabled on:
+      Node: 57.128.73.105 (score:100)
+  Resource: Fail2BanResource
+    Enabled on:
+      Node: 57.128.73.105 (score:100)
+  Resource: drbd_r1-clone
+    Enabled on:
+      Node: 162.19.90.124 (score:100)
+  Resource: drbd_r2-clone
+    Enabled on:
+      Node: 57.128.73.105 (score:100)
+  Resource: drbd_r3-clone
+    Enabled on:
+      Node: 162.19.90.124 (score:100)
+  Resource: iSCSI_tgt_r3
+    Enabled on:
+      Node: 162.19.90.124 (score:100)
+  Resource: r2_to_filer1
+    Enabled on:
+      Node: 162.19.90.124 (score:100)
+  Resource: r2_to_filer2
+    Enabled on:
+      Node: 57.128.73.105 (score:100)
+  Resource: stonith_device
+    Enabled on:
+      Node: 162.19.90.124 (score:INFINITY)
+Ordering Constraints:
+  promote drbd_r1-clone then start fs_r1_11 (kind:Mandatory)
+  promote drbd_r1-clone then start fs_r1_12 (kind:Mandatory)
+  promote drbd_r1-clone then start fs_r1_13 (kind:Mandatory)
+  promote drbd_r1-clone then start fs_r1_14 (kind:Mandatory)
+  promote drbd_r2-clone then start fs_r2_21 (kind:Mandatory)
+  promote drbd_r2-clone then start fs_r2_22 (kind:Mandatory)
+  promote drbd_r2-clone then start fs_r2_23 (kind:Mandatory)
+  promote drbd_r3-clone then start iSCSI_tgt_r3 (kind:Mandatory)
+  promote drbd_r2-clone then start r2_to_filer1 (kind:Mandatory)
+  demote drbd_r2-clone then start r2_to_filer2 (kind:Mandatory)
+  promote drbd_r2-clone then start DockerResource_R2 (kind:Mandatory)
+  stop DockerResource_R2 then stop fs_r2_22 (kind:Mandatory)
+  stop DockerResource_R2 then stop fs_r2_21 (kind:Mandatory)
+  start DockerResource_R2 then start Fail2BanResource (kind:Mandatory)
+Colocation Constraints:
+  fs_r1_11 with drbd_r1-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master)
+  fs_r1_12 with drbd_r1-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master)
+  fs_r1_13 with drbd_r1-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master)
+  fs_r1_14 with drbd_r1-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master)
+  fs_r2_21 with drbd_r2-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master)
+  fs_r2_22 with drbd_r2-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master)
+  fs_r2_23 with drbd_r2-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master)
+  iSCSI_tgt_r3 with drbd_r3-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master)
+  Filer1_additional_IP_drbd with drbd_r1-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master)
+  Filer2_additional_IP_drbd with drbd_r2-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master)
+  Filer2_additional_IP_nuage with drbd_r2-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master)
+  Filer2_additional_IP_dawantv with drbd_r2-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master)
+  Filer2_additional_IP_formateur with drbd_r2-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Master)
+Ticket Constraints:

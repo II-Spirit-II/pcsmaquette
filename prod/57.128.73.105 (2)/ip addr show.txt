@@ -1,0 +1,114 @@
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+2: enp8s0f0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN group default qlen 1000
+    link/ether a0:42:3f:4e:07:24 brd ff:ff:ff:ff:ff:ff
+3: enp8s0f1: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN group default qlen 1000
+    link/ether a0:42:3f:4e:07:25 brd ff:ff:ff:ff:ff:ff
+4: public0: <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> mtu 1500 qdisc mq master public-bond0 state UP group default qlen 1000
+    link/ether c2:f5:fd:91:a2:22 brd ff:ff:ff:ff:ff:ff permaddr 0c:42:a1:a7:2b:d2
+5: public1: <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> mtu 1500 qdisc mq master public-bond0 state UP group default qlen 1000
+    link/ether c2:f5:fd:91:a2:22 brd ff:ff:ff:ff:ff:ff permaddr 0c:42:a1:a7:2b:d3
+6: private0: <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> mtu 1500 qdisc mq master private-bond0 state UP group default qlen 1000
+    link/ether 4e:52:d6:80:e6:88 brd ff:ff:ff:ff:ff:ff permaddr 10:70:fd:21:52:04
+7: private1: <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> mtu 1500 qdisc mq master private-bond0 state UP group default qlen 1000
+    link/ether 4e:52:d6:80:e6:88 brd ff:ff:ff:ff:ff:ff permaddr 10:70:fd:21:52:05
+8: private-bond0: <BROADCAST,MULTICAST,MASTER,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether 4e:52:d6:80:e6:88 brd ff:ff:ff:ff:ff:ff
+    inet 169.254.60.173/16 metric 2048 brd 169.254.255.255 scope link private-bond0
+       valid_lft forever preferred_lft forever
+    inet 10.1.1.2/24 brd 10.1.1.255 scope global private-bond0
+       valid_lft forever preferred_lft forever
+    inet 10.1.2.2/24 brd 10.1.2.255 scope global private-bond0
+       valid_lft forever preferred_lft forever
+    inet 10.1.3.2/24 brd 10.1.3.255 scope global private-bond0
+       valid_lft forever preferred_lft forever
+    inet 169.254.60.173/32 scope global private-bond0
+       valid_lft forever preferred_lft forever
+9: public-bond0: <BROADCAST,MULTICAST,MASTER,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether c2:f5:fd:91:a2:22 brd ff:ff:ff:ff:ff:ff
+    inet 57.128.73.105/24 brd 57.128.73.255 scope global public-bond0
+       valid_lft forever preferred_lft forever
+    inet 178.32.117.50/32 scope global public-bond0
+       valid_lft forever preferred_lft forever
+    inet 92.222.107.79/32 scope global public-bond0
+       valid_lft forever preferred_lft forever
+    inet 178.33.110.250/32 scope global public-bond0
+       valid_lft forever preferred_lft forever
+10: br-ha.c.e: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:0e:41:ec:17 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.72.9/29 brd 10.0.72.15 scope global br-ha.c.e
+       valid_lft forever preferred_lft forever
+11: docker0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
+    link/ether 02:42:9a:1d:e2:df brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+       valid_lft forever preferred_lft forever
+12: br-prom-agent: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:7d:9e:0b:fc brd ff:ff:ff:ff:ff:ff
+    inet 10.0.10.9/29 brd 10.0.10.15 scope global br-prom-agent
+       valid_lft forever preferred_lft forever
+13: br-proxy-tier: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:64:c4:7c:45 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.166.1/24 brd 10.0.166.255 scope global br-proxy-tier
+       valid_lft forever preferred_lft forever
+14: br-formateur: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:e7:20:76:bd brd ff:ff:ff:ff:ff:ff
+    inet 10.0.64.9/29 brd 10.0.64.15 scope global br-formateur
+       valid_lft forever preferred_lft forever
+15: br-dawantv: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:08:01:1d:8c brd ff:ff:ff:ff:ff:ff
+    inet 10.0.63.9/29 brd 10.0.63.15 scope global br-dawantv
+       valid_lft forever preferred_lft forever
+16: br-nextcloud: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:3a:ef:15:f6 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.27.1/28 brd 10.0.27.15 scope global br-nextcloud
+       valid_lft forever preferred_lft forever
+18: veth5434ec3@if17: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-prom-agent state UP group default 
+    link/ether 42:10:04:c5:d9:33 brd ff:ff:ff:ff:ff:ff link-netnsid 1
+20: veth914adda@if19: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-ha.c.e state UP group default 
+    link/ether da:d2:71:3c:24:ef brd ff:ff:ff:ff:ff:ff link-netnsid 2
+26: vethe8d7258@if25: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-proxy-tier state UP group default 
+    link/ether 96:a7:fb:fe:7e:2b brd ff:ff:ff:ff:ff:ff link-netnsid 0
+32: veth6017368@if31: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-prom-agent state UP group default 
+    link/ether 66:0f:3a:a0:78:5b brd ff:ff:ff:ff:ff:ff link-netnsid 3
+36: veth632d029@if35: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-proxy-tier state UP group default 
+    link/ether aa:6f:2d:94:7b:14 brd ff:ff:ff:ff:ff:ff link-netnsid 4
+44: vethb7a215d@if43: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-proxy-tier state UP group default 
+    link/ether 3e:2d:13:3a:89:9f brd ff:ff:ff:ff:ff:ff link-netnsid 5
+62: veth9c43379@if61: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-dawantv state UP group default 
+    link/ether 1e:c4:b1:32:c5:dc brd ff:ff:ff:ff:ff:ff link-netnsid 6
+64: vethf8e3da7@if63: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-dawantv state UP group default 
+    link/ether 1e:b7:eb:d8:e4:4d brd ff:ff:ff:ff:ff:ff link-netnsid 7
+66: veth900d2d2@if65: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-dawantv state UP group default 
+    link/ether 16:27:38:05:87:81 brd ff:ff:ff:ff:ff:ff link-netnsid 9
+68: veth21dabae@if67: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-dawantv state UP group default 
+    link/ether 46:db:15:fa:46:ef brd ff:ff:ff:ff:ff:ff link-netnsid 8
+70: vethec1ec33@if69: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-proxy-tier state UP group default 
+    link/ether 8a:01:09:88:0f:92 brd ff:ff:ff:ff:ff:ff link-netnsid 9
+72: veth5733ed2@if71: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-proxy-tier state UP group default 
+    link/ether 12:c6:7f:e4:c5:19 brd ff:ff:ff:ff:ff:ff link-netnsid 10
+74: veth7e2885a@if73: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-dawantv state UP group default 
+    link/ether 0a:bf:ac:ea:ac:7b brd ff:ff:ff:ff:ff:ff link-netnsid 10
+76: veth0429461@if75: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-nextcloud state UP group default 
+    link/ether a2:f9:82:55:c7:38 brd ff:ff:ff:ff:ff:ff link-netnsid 11
+78: vethab0dfef@if77: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-nextcloud state UP group default 
+    link/ether 8e:11:fd:73:47:4c brd ff:ff:ff:ff:ff:ff link-netnsid 12
+80: vethc43f840@if79: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-nextcloud state UP group default 
+    link/ether 2e:f2:9d:d9:20:ff brd ff:ff:ff:ff:ff:ff link-netnsid 13
+82: vethb539a7d@if81: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-nextcloud state UP group default 
+    link/ether 52:37:c1:93:c9:4e brd ff:ff:ff:ff:ff:ff link-netnsid 14
+84: veth539c855@if83: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-nextcloud state UP group default 
+    link/ether 0e:b8:87:49:54:3d brd ff:ff:ff:ff:ff:ff link-netnsid 15
+86: vethd61cbc2@if85: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-nextcloud state UP group default 
+    link/ether ce:1b:78:41:d6:e7 brd ff:ff:ff:ff:ff:ff link-netnsid 16
+88: veth2aa296e@if87: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-nextcloud state UP group default 
+    link/ether da:44:13:ad:6b:c2 brd ff:ff:ff:ff:ff:ff link-netnsid 17
+90: veth6ca6d55@if89: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-proxy-tier state UP group default 
+    link/ether 22:83:19:3a:56:ab brd ff:ff:ff:ff:ff:ff link-netnsid 17
+92: vethd8c89f9@if91: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-formateur state UP group default 
+    link/ether 52:d3:6e:d3:ba:80 brd ff:ff:ff:ff:ff:ff link-netnsid 18
+94: vethd7623de@if93: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-proxy-tier state UP group default 
+    link/ether a6:37:9c:9b:ad:ae brd ff:ff:ff:ff:ff:ff link-netnsid 19
+96: veth213840f@if95: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-formateur state UP group default 
+    link/ether 76:2b:28:97:b8:f8 brd ff:ff:ff:ff:ff:ff link-netnsid 19

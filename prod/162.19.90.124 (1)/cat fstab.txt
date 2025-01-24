@@ -1,0 +1,7 @@
+UUID=0b40e45c-099d-46ac-8857-96d609b53bf8	/	ext4	defaults	0	1
+UUID=034d6e33-8fb3-4f2e-a589-95688fa3a053	/boot	ext4	defaults	0	0
+LABEL=EFI_SYSPART	/boot/efi	vfat	defaults	0	1
+UUID=ecedd000-456a-44ab-97a2-84d7866ba3ba	swap	swap	defaults	0	0
+UUID=4213eedb-1576-415e-8ad9-c06b58f36913	swap	swap	defaults	0	0
+#/dev/drbd0       /drbd/docker/dawanfr   ext4    defaults        0       0
+#/dev/drbd1       /drbd/docker/dawanorg   ext4    defaults        0       0

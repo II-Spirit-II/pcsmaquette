@@ -1,0 +1,108 @@
+NAME                  FSTYPE            FSVER            LABEL       UUID                                   FSAVAIL FSUSE% MOUNTPOINTS
+loop0                 squashfs          4.0                                                                       0   100% /snap/core20/2379
+loop1                 squashfs          4.0                                                                       0   100% /snap/core20/2434
+loop2                 squashfs          4.0                                                                       0   100% /snap/lxd/29351
+loop3                 squashfs          4.0                                                                       0   100% /snap/lxd/31333
+loop5                 squashfs          4.0                                                                       0   100% /snap/snapd/23258
+loop6                                                                                                             0   100% /snap/snapd/23545
+sda                                                                                                                        
+├─sda1                vfat              FAT16            EFI_SYSPART B165-9F70                                             
+├─sda2                linux_raid_member 1.2              md2         1e84f613-c7cd-f674-ff84-7cfba977a75e                  
+│ └─md2               ext4              1.0              boot        034d6e33-8fb3-4f2e-a589-95688fa3a053    674.8M    25% /boot
+├─sda3                linux_raid_member 1.2              md3         b6b6ce67-31b2-5db4-c35f-1f9d982b1dac                  
+│ └─md3               ext4              1.0              root        0b40e45c-099d-46ac-8857-96d609b53bf8    387.5G     6% /var/lib/docker/volumes/proxy_acme/_data
+│                                                                                                                          /var/lib/docker/volumes/proxy_certs/_data
+│                                                                                                                          /
+├─sda4                swap              1                swap-sda4   ecedd000-456a-44ab-97a2-84d7866ba3ba                  [SWAP]
+└─sda5                iso9660           Joliet Extension config-2    2023-02-28-19-51-13-00                                
+sdb                                                                                                                        
+├─sdb1                vfat              FAT16            EFI_SYSPART B185-85B8                               510.4M     0% /boot/efi
+├─sdb2                linux_raid_member 1.2              md2         1e84f613-c7cd-f674-ff84-7cfba977a75e                  
+│ └─md2               ext4              1.0              boot        034d6e33-8fb3-4f2e-a589-95688fa3a053    674.8M    25% /boot
+├─sdb3                linux_raid_member 1.2              md3         b6b6ce67-31b2-5db4-c35f-1f9d982b1dac                  
+│ └─md3               ext4              1.0              root        0b40e45c-099d-46ac-8857-96d609b53bf8    387.5G     6% /var/lib/docker/volumes/proxy_acme/_data
+│                                                                                                                          /var/lib/docker/volumes/proxy_certs/_data
+│                                                                                                                          /
+└─sdb4                swap              1                swap-sdb4   4213eedb-1576-415e-8ad9-c06b58f36913                  [SWAP]
+nvme4n1               linux_raid_member 1.2              filer1:0    7c443c17-ba24-a391-fd60-2f976f45776b                  
+└─md0                 LVM2_member       LVM2 001                     W63DJD-prM8-pCXY-0Xjz-MmyK-Jtm0-po825p                
+  ├─10t-dawanfr       drbd              v09                          19052639567f57c                                       
+  │ └─drbd11                                                                                                   9.2G     0% /drbd/dawanfr/docker
+  ├─10t-dawanorg      drbd              v09                          6fffa6112fdb58f4                                      
+  │ └─drbd12                                                                                                 139.1G     0% /drbd/dawanorg/docker
+  ├─10t-dawantv       drbd              v09                          9943d0f9b57772fb                                      
+  │ └─drbd21                                                                                                               
+  ├─10t-nuage         drbd              v09                          1171e9c25d2c08bd                                      
+  │ └─drbd22                                                                                                               
+  ├─10t-jehannorg     drbd              v09                          4b77a8857be19bc7                                      
+  │ └─drbd13                                                                                                  27.8G     0% /drbd/jehannorg/docker
+  ├─10t-dj--serverorg drbd              v09                          7e577b49bf6097bf                                      
+  │ └─drbd14                                                                                                  27.8G     0% /drbd/dj-serverorg/docker
+  └─10t-formateur     drbd              v09                          d8bd9a82c2b8b269                                      
+    └─drbd23                                                                                                               
+nvme1n1               linux_raid_member 1.2              filer1:0    7c443c17-ba24-a391-fd60-2f976f45776b                  
+└─md0                 LVM2_member       LVM2 001                     W63DJD-prM8-pCXY-0Xjz-MmyK-Jtm0-po825p                
+  ├─10t-dawanfr       drbd              v09                          19052639567f57c                                       
+  │ └─drbd11                                                                                                   9.2G     0% /drbd/dawanfr/docker
+  ├─10t-dawanorg      drbd              v09                          6fffa6112fdb58f4                                      
+  │ └─drbd12                                                                                                 139.1G     0% /drbd/dawanorg/docker
+  ├─10t-dawantv       drbd              v09                          9943d0f9b57772fb                                      
+  │ └─drbd21                                                                                                               
+  ├─10t-nuage         drbd              v09                          1171e9c25d2c08bd                                      
+  │ └─drbd22                                                                                                               
+  ├─10t-jehannorg     drbd              v09                          4b77a8857be19bc7                                      
+  │ └─drbd13                                                                                                  27.8G     0% /drbd/jehannorg/docker
+  ├─10t-dj--serverorg drbd              v09                          7e577b49bf6097bf                                      
+  │ └─drbd14                                                                                                  27.8G     0% /drbd/dj-serverorg/docker
+  └─10t-formateur     drbd              v09                          d8bd9a82c2b8b269                                      
+    └─drbd23                                                                                                               
+nvme5n1               drbd              v09                          76e70a495544bdcd                                      
+└─drbd31                                                                                                                   
+nvme2n1               linux_raid_member 1.2              filer1:0    7c443c17-ba24-a391-fd60-2f976f45776b                  
+└─md0                 LVM2_member       LVM2 001                     W63DJD-prM8-pCXY-0Xjz-MmyK-Jtm0-po825p                
+  ├─10t-dawanfr       drbd              v09                          19052639567f57c                                       
+  │ └─drbd11                                                                                                   9.2G     0% /drbd/dawanfr/docker
+  ├─10t-dawanorg      drbd              v09                          6fffa6112fdb58f4                                      
+  │ └─drbd12                                                                                                 139.1G     0% /drbd/dawanorg/docker
+  ├─10t-dawantv       drbd              v09                          9943d0f9b57772fb                                      
+  │ └─drbd21                                                                                                               
+  ├─10t-nuage         drbd              v09                          1171e9c25d2c08bd                                      
+  │ └─drbd22                                                                                                               
+  ├─10t-jehannorg     drbd              v09                          4b77a8857be19bc7                                      
+  │ └─drbd13                                                                                                  27.8G     0% /drbd/jehannorg/docker
+  ├─10t-dj--serverorg drbd              v09                          7e577b49bf6097bf                                      
+  │ └─drbd14                                                                                                  27.8G     0% /drbd/dj-serverorg/docker
+  └─10t-formateur     drbd              v09                          d8bd9a82c2b8b269                                      
+    └─drbd23                                                                                                               
+nvme0n1               linux_raid_member 1.2              filer1:0    7c443c17-ba24-a391-fd60-2f976f45776b                  
+└─md0                 LVM2_member       LVM2 001                     W63DJD-prM8-pCXY-0Xjz-MmyK-Jtm0-po825p                
+  ├─10t-dawanfr       drbd              v09                          19052639567f57c                                       
+  │ └─drbd11                                                                                                   9.2G     0% /drbd/dawanfr/docker
+  ├─10t-dawanorg      drbd              v09                          6fffa6112fdb58f4                                      
+  │ └─drbd12                                                                                                 139.1G     0% /drbd/dawanorg/docker
+  ├─10t-dawantv       drbd              v09                          9943d0f9b57772fb                                      
+  │ └─drbd21                                                                                                               
+  ├─10t-nuage         drbd              v09                          1171e9c25d2c08bd                                      
+  │ └─drbd22                                                                                                               
+  ├─10t-jehannorg     drbd              v09                          4b77a8857be19bc7                                      
+  │ └─drbd13                                                                                                  27.8G     0% /drbd/jehannorg/docker
+  ├─10t-dj--serverorg drbd              v09                          7e577b49bf6097bf                                      
+  │ └─drbd14                                                                                                  27.8G     0% /drbd/dj-serverorg/docker
+  └─10t-formateur     drbd              v09                          d8bd9a82c2b8b269                                      
+    └─drbd23                                                                                                               
+nvme3n1               linux_raid_member 1.2              filer1:0    7c443c17-ba24-a391-fd60-2f976f45776b                  
+└─md0                 LVM2_member       LVM2 001                     W63DJD-prM8-pCXY-0Xjz-MmyK-Jtm0-po825p                
+  ├─10t-dawanfr       drbd              v09                          19052639567f57c                                       
+  │ └─drbd11                                                                                                   9.2G     0% /drbd/dawanfr/docker
+  ├─10t-dawanorg      drbd              v09                          6fffa6112fdb58f4                                      
+  │ └─drbd12                                                                                                 139.1G     0% /drbd/dawanorg/docker
+  ├─10t-dawantv       drbd              v09                          9943d0f9b57772fb                                      
+  │ └─drbd21                                                                                                               
+  ├─10t-nuage         drbd              v09                          1171e9c25d2c08bd                                      
+  │ └─drbd22                                                                                                               
+  ├─10t-jehannorg     drbd              v09                          4b77a8857be19bc7                                      
+  │ └─drbd13                                                                                                  27.8G     0% /drbd/jehannorg/docker
+  ├─10t-dj--serverorg drbd              v09                          7e577b49bf6097bf                                      
+  │ └─drbd14                                                                                                  27.8G     0% /drbd/dj-serverorg/docker
+  └─10t-formateur     drbd              v09                          d8bd9a82c2b8b269                                      
+    └─drbd23

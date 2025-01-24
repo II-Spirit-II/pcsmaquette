@@ -1,0 +1,67 @@
+Cluster name: my_cluster
+Cluster Summary:
+  * Stack: corosync
+  * Current DC: 57.128.73.105 (2) (version 2.1.2-ada5c3b36e2) - partition with quorum
+  * Last updated: Thu Jan 23 11:03:48 2025
+  * Last change:  Wed Dec 18 02:05:09 2024 by hacluster via crmd on 57.128.73.105
+  * 2 nodes configured
+  * 24 resource instances configured
+
+Node List:
+  * Online: [ 57.128.73.105 (2) 162.19.90.124 (1) ]
+
+Full List of Resources:
+  * stonith_device      (stonith:fence_dummy):   Started 162.19.90.124
+  * Filer1_additional_IP_drbd   (ocf:heartbeat:IPaddr2):         Started 162.19.90.124
+  * Filer2_additional_IP_drbd   (ocf:heartbeat:IPaddr2):         Started 57.128.73.105
+  * Filer2_additional_IP_nuage  (ocf:heartbeat:IPaddr2):         Started 57.128.73.105
+  * Filer2_additional_IP_dawantv        (ocf:heartbeat:IPaddr2):         Started 57.128.73.105
+  * Filer2_additional_IP_formateur      (ocf:heartbeat:IPaddr2):         Started 57.128.73.105
+  * Clone Set: drbd_r1-clone [drbd_r1] (promotable):
+    * drbd_r1   (ocf:linbit:drbd):       Unpromoted 57.128.73.105
+    * drbd_r1   (ocf:linbit:drbd):       Promoted 162.19.90.124
+  * fs_r1_11    (ocf:heartbeat:Filesystem):      Started 162.19.90.124
+  * fs_r1_12    (ocf:heartbeat:Filesystem):      Started 162.19.90.124
+  * fs_r1_13    (ocf:heartbeat:Filesystem):      Started 162.19.90.124
+  * fs_r1_14    (ocf:heartbeat:Filesystem):      Started 162.19.90.124
+  * Clone Set: drbd_r2-clone [drbd_r2] (promotable):
+    * drbd_r2   (ocf:linbit:drbd):       Promoted 57.128.73.105
+    * drbd_r2   (ocf:linbit:drbd):       Unpromoted 162.19.90.124
+  * fs_r2_21    (ocf:heartbeat:Filesystem):      Started 57.128.73.105
+  * fs_r2_22    (ocf:heartbeat:Filesystem):      Started 57.128.73.105
+  * fs_r2_23    (ocf:heartbeat:Filesystem):      Started 57.128.73.105
+  * Clone Set: drbd_r3-clone [drbd_r3] (promotable):
+    * drbd_r3   (ocf:linbit:drbd):       Unpromoted 57.128.73.105
+    * drbd_r3   (ocf:linbit:drbd):       Promoted 162.19.90.124
+  * iSCSI_tgt_r3        (ocf:heartbeat:agent_tgt):       Started 162.19.90.124
+  * r2_to_filer1        (ocf:heartbeat:agent_failoverscript):    Started 162.19.90.124
+  * r2_to_filer2        (ocf:heartbeat:agent_failoverscript):    Started 57.128.73.105
+  * DockerResource_R2   (ocf:heartbeat:agent_docker_r2):         Started 57.128.73.105
+  * Fail2BanResource    (ocf:heartbeat:agent_fail2ban):  Started 57.128.73.105
+
+Node Attributes:
+  * Node: 57.128.73.105 (2):
+    * master-drbd_r1                    : 10000     
+    * master-drbd_r2                    : 10000     
+    * master-drbd_r3                    : 10000     
+  * Node: 162.19.90.124 (1):
+    * master-drbd_r1                    : 10000     
+    * master-drbd_r2                    : 10000     
+    * master-drbd_r3                    : 10000     
+
+Migration Summary:
+
+Failed Resource Actions:
+  * DockerResource_R2_monitor_0 on 57.128.73.105 'error' (1): call=84, status='complete', last-rc-change='Wed Jan  8 02:04:41 2025', queued=0ms, exec=10ms
+  * DockerResource_R2_monitor_0 on 162.19.90.124 'error' (1): call=84, status='complete', last-rc-change='Wed Jan  8 02:05:02 2025', queued=0ms, exec=11ms
+
+Tickets:
+
+PCSD Status:
+  162.19.90.124: Online
+  57.128.73.105: Online
+
+Daemon Status:
+  corosync: active/enabled
+  pacemaker: active/enabled
+  pcsd: active/enabled

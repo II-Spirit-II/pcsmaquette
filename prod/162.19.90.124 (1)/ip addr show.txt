@@ -1,0 +1,82 @@
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+2: enp8s0f0: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN group default qlen 1000
+    link/ether a0:42:3f:4e:51:44 brd ff:ff:ff:ff:ff:ff
+3: enp8s0f1: <BROADCAST,MULTICAST> mtu 1500 qdisc noop state DOWN group default qlen 1000
+    link/ether a0:42:3f:4e:51:45 brd ff:ff:ff:ff:ff:ff
+4: public0: <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> mtu 1500 qdisc mq master public-bond0 state UP group default qlen 1000
+    link/ether a2:37:9e:25:3b:a0 brd ff:ff:ff:ff:ff:ff permaddr 10:70:fd:86:ca:5a
+5: public1: <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> mtu 1500 qdisc mq master public-bond0 state UP group default qlen 1000
+    link/ether a2:37:9e:25:3b:a0 brd ff:ff:ff:ff:ff:ff permaddr 10:70:fd:86:ca:5b
+6: private0: <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> mtu 1500 qdisc mq master private-bond0 state UP group default qlen 1000
+    link/ether be:6b:65:50:a6:ae brd ff:ff:ff:ff:ff:ff permaddr 10:70:fd:70:ac:da
+7: private1: <BROADCAST,MULTICAST,SLAVE,UP,LOWER_UP> mtu 1500 qdisc mq master private-bond0 state UP group default qlen 1000
+    link/ether be:6b:65:50:a6:ae brd ff:ff:ff:ff:ff:ff permaddr 10:70:fd:70:ac:db
+8: private-bond0: <BROADCAST,MULTICAST,MASTER,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether be:6b:65:50:a6:ae brd ff:ff:ff:ff:ff:ff
+    inet 169.254.113.169/16 metric 2048 brd 169.254.255.255 scope link private-bond0
+       valid_lft forever preferred_lft forever
+    inet 10.1.1.1/24 brd 10.1.1.255 scope global private-bond0
+       valid_lft forever preferred_lft forever
+    inet 10.1.2.1/24 brd 10.1.2.255 scope global private-bond0
+       valid_lft forever preferred_lft forever
+    inet 10.1.3.1/24 brd 10.1.3.255 scope global private-bond0
+       valid_lft forever preferred_lft forever
+    inet 169.254.113.169/32 scope global private-bond0
+       valid_lft forever preferred_lft forever
+9: public-bond0: <BROADCAST,MULTICAST,MASTER,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether a2:37:9e:25:3b:a0 brd ff:ff:ff:ff:ff:ff
+    inet 162.19.90.124/24 brd 162.19.90.255 scope global public-bond0
+       valid_lft forever preferred_lft forever
+10: br-prom-agent: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:26:d5:3a:7d brd ff:ff:ff:ff:ff:ff
+    inet 10.0.10.9/29 brd 10.0.10.15 scope global br-prom-agent
+       valid_lft forever preferred_lft forever
+11: br-formateur: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:97:84:96:c0 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.164.9/29 brd 10.0.164.15 scope global br-formateur
+       valid_lft forever preferred_lft forever
+12: br-nextcloud: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
+    link/ether 02:42:18:a6:04:b3 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.27.1/28 brd 10.0.27.15 scope global br-nextcloud
+       valid_lft forever preferred_lft forever
+13: br-ha.c.e: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:6b:00:37:8e brd ff:ff:ff:ff:ff:ff
+    inet 10.0.72.9/29 brd 10.0.72.15 scope global br-ha.c.e
+       valid_lft forever preferred_lft forever
+14: br-proxy-tier: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default 
+    link/ether 02:42:b7:c7:ce:54 brd ff:ff:ff:ff:ff:ff
+    inet 10.0.166.1/24 brd 10.0.166.255 scope global br-proxy-tier
+       valid_lft forever preferred_lft forever
+15: br-dawantv: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
+    link/ether 02:42:28:ce:12:ab brd ff:ff:ff:ff:ff:ff
+    inet 10.0.63.9/29 brd 10.0.63.15 scope global br-dawantv
+       valid_lft forever preferred_lft forever
+16: docker0: <NO-CARRIER,BROADCAST,MULTICAST,UP> mtu 1500 qdisc noqueue state DOWN group default 
+    link/ether 02:42:87:89:ad:80 brd ff:ff:ff:ff:ff:ff
+    inet 172.17.0.1/16 brd 172.17.255.255 scope global docker0
+       valid_lft forever preferred_lft forever
+18: vetha87e05d@if17: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-ha.c.e state UP group default 
+    link/ether be:2d:1e:99:05:ad brd ff:ff:ff:ff:ff:ff link-netnsid 0
+20: veth7b7cd2b@if19: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-prom-agent state UP group default 
+    link/ether 9a:cc:6b:29:ae:1f brd ff:ff:ff:ff:ff:ff link-netnsid 1
+22: veth9d1a665@if21: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-formateur state UP group default 
+    link/ether 66:52:5b:51:eb:18 brd ff:ff:ff:ff:ff:ff link-netnsid 6
+24: veth26e7a04@if23: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-proxy-tier state UP group default 
+    link/ether 32:15:31:0e:d9:68 brd ff:ff:ff:ff:ff:ff link-netnsid 2
+26: veth1a0fdb0@if25: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-prom-agent state UP group default 
+    link/ether e6:47:1f:0a:ec:49 brd ff:ff:ff:ff:ff:ff link-netnsid 4
+28: veth8f7c1f0@if27: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-formateur state UP group default 
+    link/ether f6:35:50:1d:72:f4 brd ff:ff:ff:ff:ff:ff link-netnsid 5
+30: vethae4584a@if29: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-proxy-tier state UP group default 
+    link/ether 9a:08:f5:a6:0f:8b brd ff:ff:ff:ff:ff:ff link-netnsid 3
+32: veth6ab26a6@if31: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-proxy-tier state UP group default 
+    link/ether da:42:df:5b:e3:ed brd ff:ff:ff:ff:ff:ff link-netnsid 7
+34: vethefc90d0@if33: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue master br-proxy-tier state UP group default 
+    link/ether 62:3b:d0:ae:33:fc brd ff:ff:ff:ff:ff:ff link-netnsid 6
+35: private-bond0.9@private-bond0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP group default qlen 1000
+    link/ether be:6b:65:50:a6:ae brd ff:ff:ff:ff:ff:ff
+    inet 192.168.199.100/24 scope global private-bond0.9
+       valid_lft forever preferred_lft forever

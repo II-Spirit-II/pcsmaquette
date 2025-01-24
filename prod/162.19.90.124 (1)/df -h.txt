@@ -1,0 +1,12 @@
+Filesystem      Size  Used Avail Use% Mounted on
+tmpfs            13G   14M   13G   1% /run
+/dev/md3        437G   28G  388G   7% /
+tmpfs            63G   33M   63G   1% /dev/shm
+tmpfs           5.0M     0  5.0M   0% /run/lock
+/dev/md2        988M  246M  675M  27% /boot
+/dev/sdb1       511M  328K  511M   1% /boot/efi
+/dev/drbd11     9.8G   32K  9.3G   1% /drbd/dawanfr/docker
+/dev/drbd13      30G  380K   28G   1% /drbd/jehannorg/docker
+/dev/drbd14      30G  688K   28G   1% /drbd/dj-serverorg/docker
+/dev/drbd12     147G   36K  140G   1% /drbd/dawanorg/docker
+tmpfs            13G  4.0K   13G   1% /run/user/1001
