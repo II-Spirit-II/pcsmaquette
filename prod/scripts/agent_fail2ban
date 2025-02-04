@@ -1,0 +1,77 @@
+#!/bin/bash
+
+OCF_SUCCESS=0
+OCF_ERR_GENERIC=1
+OCF_ERR_UNIMPLEMENTED=3
+OCF_ERR_CONFIGURED=6
+OCF_NOT_RUNNING=7
+
+fail2ban_start() {
+    systemctl restart fail2ban
+    if [ $? -ne 0 ]; then
+        ocf_log err "Failed to restart fail2ban"
+        return $OCF_ERR_GENERIC
+    fi
+
+    return $OCF_SUCCESS
+}
+
+fail2ban_stop() {
+    return $OCF_SUCCESS
+}
+
+fail2ban_monitor() {
+    systemctl is-active fail2ban
+    if [ $? -ne 0 ]; then
+        ocf_log err "Service fail2ban is down"
+        return $OCF_NOT_RUNNING
+    fi
+
+    return $OCF_SUCCESS
+}
+
+fail2ban_meta_data() {
+    cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="fail2ban">
+    <version>1.0</version>
+    <longdesc lang="en">
+        Manage fail2ban service during resource failover 
+    </longdesc>
+    <shortdesc>Manage fail2ban service during failover</shortdesc>
+    <parameters>
+    </parameters>
+    <actions>
+        <action name="start" timeout="20" />
+        <action name="stop" timeout="20" />
+        <action name="monitor" timeout="20" interval="10" />
+        <action name="meta-data" timeout="5" />
+    </actions>
+</resource-agent>
+END
+}
+
+case $1 in
+    start)
+        fail2ban_start
+        exit $?
+        ;;
+    stop)
+        fail2ban_stop
+        exit $?
+        ;;
+    monitor)
+        fail2ban_monitor
+        exit $?
+        ;;
+    meta-data)
+        fail2ban_meta_data
+        exit $OCF_SUCCESS
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|monitor|meta-data}"
+        exit $OCF_ERR_UNIMPLEMENTED
+        ;;
+esac
+

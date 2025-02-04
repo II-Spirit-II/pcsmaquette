@@ -1,0 +1,96 @@
+#!/bin/bash
+
+OCF_SUCCESS=0
+OCF_ERR_GENERIC=1
+OCF_ERR_UNIMPLEMENTED=3
+OCF_ERR_CONFIGURED=6
+OCF_NOT_RUNNING=7
+
+# Fonction pour démarrer la ressource
+tgt_start() {
+
+    ip l add link private-bond0 name private-bond0.9 type vlan id 9
+    ip a add 192.168.199.100/24 dev private-bond0.9
+    ip l set dev private-bond0.9 up
+
+    systemctl start tgt
+    if [ $? -ne 0 ]; then
+        ocf_log err "Failed to start tgt"
+        return $OCF_ERR_GENERIC
+    fi
+
+    return $OCF_SUCCESS
+}
+
+# Fonction pour arrêter la ressource
+tgt_stop() {
+    ip l set dev private-bond0.9 down
+    ip l del private-bond0.9
+    systemctl stop tgt
+
+    return $OCF_SUCCESS
+}
+
+# Fonction pour vérifier l'état de la ressource
+tgt_monitor() {
+    systemctl is-active tgt
+    if [ $? -ne 0 ]; then
+        ocf_log err "Service tgt is down"
+        return $OCF_NOT_RUNNING
+    fi
+
+    ip a | grep private-bond0.9 >/dev/null
+    if [ $? -ne 0 ]; then
+        ocf_log err "Network interface is down(private-bond0.9)"
+        return $OCF_NOT_RUNNING
+    fi
+
+    return $OCF_SUCCESS
+}
+
+# Métadonnées OCF
+tgt_meta_data() {
+    cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="tgt">
+    <version>1.0</version>
+    <longdesc lang="en">
+        Manage tgt service 
+    </longdesc>
+    <shortdesc>Manage tgt service</shortdesc>
+    <parameters>
+    </parameters>
+    <actions>
+        <action name="start" timeout="20" />
+        <action name="stop" timeout="20" />
+        <action name="monitor" timeout="20" interval="10" />
+        <action name="meta-data" timeout="5" />
+    </actions>
+</resource-agent>
+END
+}
+
+# Main
+case $1 in
+    start)
+        tgt_start
+        exit $?
+        ;;
+    stop)
+        tgt_stop
+        exit $?
+        ;;
+    monitor)
+        tgt_monitor
+        exit $?
+        ;;
+    meta-data)
+        tgt_meta_data
+        exit $OCF_SUCCESS
+        ;;
+    *)
+        echo "Usage: $0 {start|stop|monitor|meta-data}"
+        exit $OCF_ERR_UNIMPLEMENTED
+        ;;
+esac

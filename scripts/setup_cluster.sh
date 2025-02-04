@@ -45,9 +45,12 @@ if [[ $(hostname) == "filer1" ]]; then
     pcs cluster start --all
 
     # Configuration des propriétés de base du cluster
-    pcs property set stonith-enabled=false
+    pcs property set stonith-enabled=true
     pcs property set stonith-action=off
-    pcs property set no-quorum-policy=ignore
+    
+    # Configuration du STONITH comme en production
+    pcs stonith create stonith-dummy fence_dummy \
+        pcmk_host_list="filer2,filer1"
 
     # Ajout d'une ressource IP flottante de test
     pcs resource create virtual_ip ocf:heartbeat:IPaddr2 \

@@ -28,6 +28,9 @@ Vagrant.configure("2") do |config|
       systemctl stop ufw
       systemctl disable ufw
       
+      # Création du répertoire corosync s'il n'existe pas
+      mkdir -p /etc/corosync
+      
       # Configuration de l'interface réseau pour corosync
       ip link set enp0s8 up
     SHELL
@@ -53,11 +56,14 @@ Vagrant.configure("2") do |config|
     
     node1.vm.provision "shell", inline: <<-SHELL
       apt-get update
-      apt-get install -y pacemaker corosync crmsh pcs fence-agents
+      apt-get install -y pacemaker corosync crmsh pcs fence-agents ipmitool
       
       # Désactiver ufw car il interfère avec corosync
       systemctl stop ufw
       systemctl disable ufw
+      
+      # Création du répertoire corosync s'il n'existe pas
+      mkdir -p /etc/corosync
       
       # Configuration de l'interface réseau pour corosync
       ip link set enp0s8 up

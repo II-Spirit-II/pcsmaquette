@@ -1,0 +1,106 @@
+#!/bin/bash
+
+OCF_SUCCESS=0
+OCF_ERR_GENERIC=1
+OCF_ERR_UNIMPLEMENTED=3
+OCF_ERR_CONFIGURED=6
+OCF_NOT_RUNNING=7
+
+# Chemin vers votre script de surveillance
+HEALTH_CHECK_SCRIPT="/root/pcs/monitor_r1_docker.sh"
+
+# Définir les points de montage
+declare -a r1_mount_points=(
+  "/drbd/dawanfr/docker/docker/stack/dawanfr"
+  "/drbd/dawanorg/docker/docker/stack/dawanorg"
+  "/drbd/jehannorg/docker/docker/stack/jehannorg"
+  "/drbd/djserverorg/docker/docker/stack/djserverorg"
+)
+
+start_operation() {
+  for mount_point in "${r1_mount_points[@]}"; do
+    cd $mount_point
+    project_name=$(basename "$mount_point")
+
+    if [ -x "init.sh" ]; then
+      ./init.sh
+    fi
+  done
+
+  return $OCF_SUCCESS
+}
+
+stop_operation() {
+  for mount_point in "${r1_mount_points[@]}"; do
+    cd $mount_point
+    project_name=$(basename "$mount_point")
+
+    declare -a container_names=("^${project_name}-")
+
+    for container_name in "${container_names[@]}"; do
+      # Trouver tous les conteneurs en cours d'exécution qui correspondent au schéma de nommage
+      running_containers=$(docker ps -q -f "name=${container_name}")
+
+      if [ -n "$running_containers" ]; then
+        docker stop $running_containers
+      fi
+    done
+  done
+
+  return $OCF_SUCCESS
+}
+
+monitor_operation() {
+  bash $HEALTH_CHECK_SCRIPT
+  if [ $? -ne 0 ]; then
+    start_operation
+    exit 1
+  fi
+
+  return $OCF_SUCCESS
+}
+
+meta_data_operation() {
+  cat <<'EOF'
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="agent_docker_r1">
+  <version>1.0</version>
+  <longdesc lang="en">
+    Agent pour gérer certains aspects des conteneurs Docker.
+  </longdesc>
+  <shortdesc lang="en">Docker container agent</shortdesc>
+  <parameters>
+  </parameters>
+  <actions>
+    <action name="start" timeout="90s" />
+    <action name="stop" timeout="90s" />
+    <action name="monitor" timeout="30s" interval="60s" />
+    <action name="meta-data" timeout="5s" />
+  </actions>
+  <special tag="Docker">
+  </special>
+</resource-agent>
+EOF
+}
+
+case $1 in
+  start)
+    start_operation
+    ;;
+  stop)
+    stop_operation
+    ;;
+  monitor)
+    monitor_operation
+    ;;
+  meta-data)
+    meta_data_operation
+    ;;
+  *)
+    echo "Usage: $0 {start|stop|monitor|meta-data}"
+    exit 1
+    ;;
+esac
+
+exit 0
