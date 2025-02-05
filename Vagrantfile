@@ -22,7 +22,11 @@ Vagrant.configure("2") do |config|
     
     node2.vm.provision "shell", inline: <<-SHELL
       apt-get update
-      apt-get install -y pacemaker corosync crmsh pcs fence-agents
+      apt-get install -y pacemaker corosync crmsh pcs fence-agents docker.io
+      
+      # Création d'un conteneur nginx de test
+      docker pull nginx:alpine
+      docker create --name nginx-cluster -p 8080:80 nginx:alpine
       
       # Désactiver ufw car il interfère avec corosync
       systemctl stop ufw
@@ -33,6 +37,11 @@ Vagrant.configure("2") do |config|
       
       # Configuration de l'interface réseau pour corosync
       ip link set enp0s8 up
+      
+      # Installation de l'agent Docker personnalisé
+      mkdir -p /usr/lib/ocf/resource.d/heartbeat/
+      cp /vagrant/templates/agent_docker_r2 /usr/lib/ocf/resource.d/heartbeat/agent_docker
+      chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker
     SHELL
     
     node2.vm.provision "file", source: "templates/corosync.conf", 
@@ -56,7 +65,11 @@ Vagrant.configure("2") do |config|
     
     node1.vm.provision "shell", inline: <<-SHELL
       apt-get update
-      apt-get install -y pacemaker corosync crmsh pcs fence-agents ipmitool
+      apt-get install -y pacemaker corosync crmsh pcs fence-agents docker.io
+      
+      # Création d'un conteneur nginx de test
+      docker pull nginx:alpine
+      docker create --name nginx-cluster -p 8080:80 nginx:alpine
       
       # Désactiver ufw car il interfère avec corosync
       systemctl stop ufw
@@ -67,6 +80,11 @@ Vagrant.configure("2") do |config|
       
       # Configuration de l'interface réseau pour corosync
       ip link set enp0s8 up
+      
+      # Installation de l'agent Docker personnalisé
+      mkdir -p /usr/lib/ocf/resource.d/heartbeat/
+      cp /vagrant/templates/agent_docker_r2 /usr/lib/ocf/resource.d/heartbeat/agent_docker
+      chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker
     SHELL
     
     node1.vm.provision "file", source: "templates/corosync.conf", 

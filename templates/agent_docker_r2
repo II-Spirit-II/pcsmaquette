@@ -1,0 +1,85 @@
+#!/bin/sh
+#
+# OCF agent for Docker containers management
+#
+# License: GNU General Public License (GPL)
+#
+
+# Initialization
+: ${OCF_FUNCTIONS_DIR=${OCF_ROOT}/lib/heartbeat}
+. ${OCF_FUNCTIONS_DIR}/ocf-shellfuncs
+
+# Defaults
+DOCKER=/usr/bin/docker
+
+docker_usage() {
+    cat <<END
+        usage: $0 {start|stop|monitor|meta-data}
+END
+}
+
+docker_meta_data() {
+    cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+<resource-agent name="agent_docker_r2">
+<version>1.0</version>
+<longdesc lang="en">
+Resource agent for managing Docker containers
+</longdesc>
+<shortdesc lang="en">Docker containers RA</shortdesc>
+<parameters>
+</parameters>
+<actions>
+<action name="start"        timeout="60s" />
+<action name="stop"         timeout="60s" />
+<action name="monitor"      timeout="30s" interval="30s" depth="0" />
+<action name="meta-data"    timeout="5s" />
+</actions>
+</resource-agent>
+END
+}
+
+docker_monitor() {
+    # Vérifier si les conteneurs sont en cours d'exécution
+    if [ "$($DOCKER ps -q | wc -l)" -gt 0 ]; then
+        return $OCF_SUCCESS
+    fi
+    return $OCF_NOT_RUNNING
+}
+
+docker_start() {
+    # Démarrer tous les conteneurs qui devraient l'être
+    $DOCKER start $(docker ps -a -q)
+    return $OCF_SUCCESS
+}
+
+docker_stop() {
+    # Arrêter tous les conteneurs
+    $DOCKER stop $(docker ps -q)
+    return $OCF_SUCCESS
+}
+
+case $1 in
+    meta-data)
+        docker_meta_data
+        exit $OCF_SUCCESS
+        ;;
+    start)
+        docker_start
+        ;;
+    stop)
+        docker_stop
+        ;;
+    monitor)
+        docker_monitor
+        ;;
+    usage|help)
+        docker_usage
+        exit $OCF_SUCCESS
+        ;;
+    *)
+        docker_usage
+        exit $OCF_ERR_UNIMPLEMENTED
+        ;;
+esac 
