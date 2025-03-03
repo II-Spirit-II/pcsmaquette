@@ -11,6 +11,7 @@
 
 # Defaults
 DOCKER=/usr/bin/docker
+CONTAINER_DB="/vagrant/shared/containers.db"
 
 docker_usage() {
     cat <<END
@@ -40,23 +41,147 @@ Resource agent for managing Docker containers
 END
 }
 
-docker_monitor() {
-    # Vérifier si les conteneurs sont en cours d'exécution
-    if [ "$($DOCKER ps -q | wc -l)" -gt 0 ]; then
-        return $OCF_SUCCESS
+# Enregistre les conteneurs pour le failover
+register_containers() {
+    if [ ! -d "$(dirname $CONTAINER_DB)" ]; then
+        mkdir -p "$(dirname $CONTAINER_DB)"
     fi
-    return $OCF_NOT_RUNNING
+    
+    # Sauvegarder les informations des conteneurs en cours d'exécution
+    $DOCKER ps --format "{{.ID}}:{{.Image}}:{{.Names}}:{{.Ports}}" > "${CONTAINER_DB}.new"
+    mv "${CONTAINER_DB}.new" "${CONTAINER_DB}"
+    chmod 666 "${CONTAINER_DB}"
+    
+    ocf_log info "Containers registered for failover: $(cat ${CONTAINER_DB} | wc -l) containers"
+}
+
+# Récupère et restaure les conteneurs en cas de failover
+restore_containers() {
+    if [ ! -f "${CONTAINER_DB}" ]; then
+        ocf_log info "No container database found, nothing to restore"
+        return 0
+    fi
+    
+    # DEBUG: afficher le contenu du fichier de la base de données
+    ocf_log info "RESTORE: Container DB content: $(cat ${CONTAINER_DB})"
+
+    # Lire chaque ligne du fichier de base de données de conteneurs
+    while IFS=':' read -r id image name ports; do
+        # DEBUG
+        ocf_log info "RESTORE: Processing container: $name (image: $image, ports: $ports)"
+
+        # Vérifier si le conteneur existe déjà
+        if ! $DOCKER ps -a --format '{{.Names}}' | grep -q "$name"; then
+            ocf_log info "Restoring container $name from image $image"
+            
+            # Tirer l'image si nécessaire
+            if ! $DOCKER image inspect "$image" >/dev/null 2>&1; then
+                ocf_log info "Pulling image $image"
+                $DOCKER pull "$image"
+            fi
+            
+            # Extraire le mapping de port
+            port_args=""
+            if [ ! -z "$ports" ]; then
+                # Format simplifié pour extraire juste les ports
+                host_port=$(echo $ports | grep -oE '[0-9]+:' | tr -d ':' | head -1)
+                container_port=$(echo $ports | grep -oE ':[0-9]+/' | tr -d ':/' | head -1)
+                
+                if [ ! -z "$host_port" ] && [ ! -z "$container_port" ]; then
+                    port_args="-p $host_port:$container_port"
+                fi
+            fi
+            
+            # Créer et démarrer le conteneur
+            $DOCKER run -d --name "$name" $port_args "$image"
+            
+            # Vérifier si le conteneur a démarré
+            if ! $DOCKER ps | grep -q "$name"; then
+                ocf_log err "Failed to restore container $name"
+            else
+                ocf_log info "Container $name successfully restored"
+            fi
+        elif ! $DOCKER ps | grep -q "$name"; then
+            # Le conteneur existe mais n'est pas en cours d'exécution
+            ocf_log info "Starting existing container $name"
+            $DOCKER start "$name"
+        fi
+    done < "${CONTAINER_DB}"
+}
+
+docker_monitor() {
+    # Vérifier si le service Docker est en cours d'exécution
+    if ! systemctl is-active docker >/dev/null 2>&1; then
+        ocf_log err "Docker service is not running"
+        return $OCF_ERR_GENERIC
+    fi
+    
+    # Enregistrer les conteneurs actuellement en cours d'exécution
+    register_containers
+    
+    # DEBUG: journaliser le statut actuel
+    ocf_log info "MONITOR: Currently running containers: $($DOCKER ps --format '{{.Names}}' | tr '\n' ' ')"
+    if [ -f "${CONTAINER_DB}" ]; then
+        ocf_log info "MONITOR: Registered containers in DB: $(cat ${CONTAINER_DB} | tr '\n' ' ')"
+    else
+        ocf_log info "MONITOR: No container database found"
+    fi
+    
+    # Vérifier s'il y a des conteneurs en cours d'exécution
+    if ! $DOCKER ps -q | grep -q .; then
+        # S'il n'y a pas de conteneurs en cours d'exécution,
+        # mais qu'il y a des conteneurs dans la base de données
+        if [ -f "${CONTAINER_DB}" ] && [ -s "${CONTAINER_DB}" ]; then
+            ocf_log warn "No running containers, but containers are registered"
+            return $OCF_NOT_RUNNING
+        fi
+    fi
+    
+    return $OCF_SUCCESS
 }
 
 docker_start() {
-    # Démarrer tous les conteneurs qui devraient l'être
-    $DOCKER start $(docker ps -a -q)
+    # Restaurer les conteneurs enregistrés
+    restore_containers
+    
+    # Vérifier s'il y a des conteneurs en cours d'exécution
+    if ! $DOCKER ps -q | grep -q .; then
+        # S'il n'y a pas de conteneurs mais qu'il y a des entrées dans la DB
+        if [ -f "${CONTAINER_DB}" ] && [ -s "${CONTAINER_DB}" ]; then
+            ocf_log err "Failed to restore containers"
+            return $OCF_ERR_GENERIC
+        else
+            # Pas d'erreur s'il n'y a pas de conteneurs enregistrés
+            ocf_log info "No containers registered, nothing to start"
+        fi
+    fi
+    
     return $OCF_SUCCESS
 }
 
 docker_stop() {
+    # Enregistrer les conteneurs avant de les arrêter
+    register_containers
+    
     # Arrêter tous les conteneurs
-    $DOCKER stop $(docker ps -q)
+    running_containers=$($DOCKER ps -q)
+    
+    if [ -z "$running_containers" ]; then
+        ocf_log info "No running containers to stop"
+        return $OCF_SUCCESS
+    fi
+    
+    for container in $running_containers; do
+        container_name=$($DOCKER inspect --format='{{.Name}}' $container | sed 's/^\///')
+        ocf_log info "Stopping container $container_name"
+        
+        $DOCKER stop $container
+        if [ $? -ne 0 ]; then
+            ocf_log err "Failed to stop container $container_name"
+            # Continue avec les autres conteneurs
+        fi
+    done
+    
     return $OCF_SUCCESS
 }
 

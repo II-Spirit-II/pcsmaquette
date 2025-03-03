@@ -22,15 +22,21 @@ Vagrant.configure("2") do |config|
     
     node2.vm.provision "shell", inline: <<-SHELL
       apt-get update
-      apt-get install -y pacemaker corosync crmsh pcs fence-agents docker.io
-      
-      # Création d'un conteneur nginx de test
-      docker pull nginx:alpine
-      docker create --name nginx-cluster -p 8080:80 nginx:alpine
+      apt-get install -y pacemaker corosync crmsh pcs fence-agents docker.io resource-agents
       
       # Désactiver ufw car il interfère avec corosync
       systemctl stop ufw
       systemctl disable ufw
+      
+      # Configuration de SSH pour permettre l'échange d'informations entre nœuds
+      if [ ! -f /root/.ssh/id_rsa ]; then
+        mkdir -p /root/.ssh
+        ssh-keygen -t rsa -f /root/.ssh/id_rsa -N ""
+        cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+        chmod 600 /root/.ssh/authorized_keys
+      fi
+      echo "192.168.56.101 filer1" >> /etc/hosts
+      echo "192.168.56.102 filer2" >> /etc/hosts
       
       # Création du répertoire corosync s'il n'existe pas
       mkdir -p /etc/corosync
@@ -40,8 +46,8 @@ Vagrant.configure("2") do |config|
       
       # Installation de l'agent Docker personnalisé
       mkdir -p /usr/lib/ocf/resource.d/heartbeat/
-      cp /vagrant/templates/agent_docker_r2 /usr/lib/ocf/resource.d/heartbeat/agent_docker
-      chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker
+      cp /vagrant/templates/agent_docker_r2 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r2
+      chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r2
     SHELL
     
     node2.vm.provision "file", source: "templates/corosync.conf", 
@@ -65,15 +71,21 @@ Vagrant.configure("2") do |config|
     
     node1.vm.provision "shell", inline: <<-SHELL
       apt-get update
-      apt-get install -y pacemaker corosync crmsh pcs fence-agents docker.io
-      
-      # Création d'un conteneur nginx de test
-      docker pull nginx:alpine
-      docker create --name nginx-cluster -p 8080:80 nginx:alpine
+      apt-get install -y pacemaker corosync crmsh pcs fence-agents docker.io resource-agents
       
       # Désactiver ufw car il interfère avec corosync
       systemctl stop ufw
       systemctl disable ufw
+      
+      # Configuration de SSH pour permettre l'échange d'informations entre nœuds
+      if [ ! -f /root/.ssh/id_rsa ]; then
+        mkdir -p /root/.ssh
+        ssh-keygen -t rsa -f /root/.ssh/id_rsa -N ""
+        cat /root/.ssh/id_rsa.pub >> /root/.ssh/authorized_keys
+        chmod 600 /root/.ssh/authorized_keys
+      fi
+      echo "192.168.56.101 filer1" >> /etc/hosts
+      echo "192.168.56.102 filer2" >> /etc/hosts
       
       # Création du répertoire corosync s'il n'existe pas
       mkdir -p /etc/corosync
@@ -83,8 +95,8 @@ Vagrant.configure("2") do |config|
       
       # Installation de l'agent Docker personnalisé
       mkdir -p /usr/lib/ocf/resource.d/heartbeat/
-      cp /vagrant/templates/agent_docker_r2 /usr/lib/ocf/resource.d/heartbeat/agent_docker
-      chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker
+      cp /vagrant/templates/agent_docker_r2 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r2
+      chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r2
     SHELL
     
     node1.vm.provision "file", source: "templates/corosync.conf", 

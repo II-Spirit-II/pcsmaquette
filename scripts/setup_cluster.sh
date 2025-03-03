@@ -16,14 +16,16 @@ systemctl stop corosync pacemaker
 # Nettoyage de toute configuration existante
 pcs cluster destroy
 
-# S'assurer que la configuration corosync est présente
-if [ -f /tmp/corosync.conf ]; then
-  cp /tmp/corosync.conf /etc/corosync/corosync.conf
-elif [ -f /vagrant/templates/corosync.conf ]; then
-  cp /vagrant/templates/corosync.conf /etc/corosync/corosync.conf
-fi
-chown root:root /etc/corosync/corosync.conf
-chmod 644 /etc/corosync/corosync.conf
+# Installation de l'agent Docker personnalisé sur tous les nœuds
+mkdir -p /usr/lib/ocf/resource.d/heartbeat/
+cp /vagrant/templates/agent_docker_r2 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r2
+chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r2
+
+# Créer le répertoire partagé pour les informations de conteneurs
+mkdir -p /vagrant/shared
+chmod 777 /vagrant/shared
+touch /vagrant/shared/containers.db
+chmod 666 /vagrant/shared/containers.db
 
 # Configuration initiale du cluster (uniquement sur filer1)
 if [[ $(hostname) == "filer1" ]]; then
@@ -67,29 +69,33 @@ if [[ $(hostname) == "filer1" ]]; then
     pcs constraint location virtual_ip prefers filer1=50
     pcs constraint location virtual_ip prefers filer2=50
 
-    # Installation de l'agent Docker personnalisé
-    cp /vagrant/templates/agent_docker_r2 /usr/lib/ocf/resource.d/heartbeat/agent_docker
-    chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker
-
     # Configuration de la ressource Docker
-    pcs resource create agent_docker ocf:heartbeat:agent_docker \
+    pcs resource create agent_docker ocf:heartbeat:agent_docker_r2 \
         op monitor interval=30s timeout=30s \
         op start interval=0s timeout=60s \
         op stop interval=0s timeout=60s
 
-    # Configuration des contraintes pour Docker
-    pcs constraint location agent_docker prefers filer1=50
-    pcs constraint location agent_docker prefers filer2=50
-
-    # Ajouter une contrainte d'ordre entre l'IP et Docker
+    # Configuration du failover pour Docker
+    pcs constraint colocation add agent_docker with virtual_ip INFINITY
     pcs constraint order virtual_ip then agent_docker
 
-    # Configuration des règles de failover
-    pcs constraint colocation add virtual_ip with agent_docker score=INFINITY
+    # Forcer le nettoyage des ressources lors des migrations
+    pcs resource defaults resource-stickiness=0
+    pcs resource defaults migration-threshold=1
 
     # Attendre que les ressources soient déplacées
     sleep 30
     pcs status
+
+    # Augmenter les timeouts pour l'agent Docker
+    pcs resource update agent_docker op start timeout=120s
+    pcs resource update agent_docker op stop timeout=120s
+    
+    # Configurer les logs pour faciliter le débogage
+    pcs property set cluster-recheck-interval=1min
+    
+    # Définir des rôles clairs pour les ressources
+    pcs constraint location agent_docker prefers filer2=INFINITY
 fi
 
 # Création du répertoire pour les agents OCF personnalisés
