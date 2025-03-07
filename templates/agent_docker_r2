@@ -12,6 +12,8 @@
 # Defaults
 DOCKER=/usr/bin/docker
 CONTAINER_DB="/vagrant/shared/containers.db"
+INIT_SCRIPTS_DIR="/vagrant/init_scripts"
+MAX_RETRIES=3
 
 docker_usage() {
     cat <<END
@@ -41,6 +43,24 @@ Resource agent for managing Docker containers
 END
 }
 
+# Exécute les scripts d'initialisation si présents
+run_init_scripts() {
+    if [ -d "$INIT_SCRIPTS_DIR" ]; then
+        ocf_log info "Checking for initialization scripts in $INIT_SCRIPTS_DIR"
+        for script in $INIT_SCRIPTS_DIR/*.sh; do
+            if [ -x "$script" ]; then
+                ocf_log info "Running initialization script: $script"
+                $script
+                if [ $? -ne 0 ]; then
+                    ocf_log warn "Initialization script $script failed"
+                fi
+            fi
+        done
+    else
+        ocf_log info "No initialization scripts directory found"
+    fi
+}
+
 # Enregistre les conteneurs pour le failover
 register_containers() {
     if [ ! -d "$(dirname $CONTAINER_DB)" ]; then
@@ -67,7 +87,11 @@ restore_containers() {
 
     # Lire chaque ligne du fichier de base de données de conteneurs
     while IFS=':' read -r id image name ports; do
-        # DEBUG
+        # Ignorer les lignes vides
+        if [ -z "$name" ] || [ -z "$image" ]; then
+            continue
+        fi
+        
         ocf_log info "RESTORE: Processing container: $name (image: $image, ports: $ports)"
 
         # Vérifier si le conteneur existe déjà
@@ -78,6 +102,10 @@ restore_containers() {
             if ! $DOCKER image inspect "$image" >/dev/null 2>&1; then
                 ocf_log info "Pulling image $image"
                 $DOCKER pull "$image"
+                if [ $? -ne 0 ]; then
+                    ocf_log err "Failed to pull image $image"
+                    continue
+                fi
             fi
             
             # Extraire le mapping de port
@@ -105,8 +133,56 @@ restore_containers() {
             # Le conteneur existe mais n'est pas en cours d'exécution
             ocf_log info "Starting existing container $name"
             $DOCKER start "$name"
+            
+            # Vérifier si le conteneur a démarré
+            if ! $DOCKER ps | grep -q "$name"; then
+                ocf_log err "Failed to start container $name"
+            fi
         fi
     done < "${CONTAINER_DB}"
+}
+
+# Vérifie l'état des conteneurs et tente de les réparer si nécessaire
+check_and_repair_containers() {
+    local retry_count=0
+    local containers_ok=false
+    
+    while [ $retry_count -lt $MAX_RETRIES ] && [ "$containers_ok" = "false" ]; do
+        # Vérifier si des conteneurs sont enregistrés mais pas en cours d'exécution
+        if [ -f "${CONTAINER_DB}" ] && [ -s "${CONTAINER_DB}" ]; then
+            local missing_containers=false
+            
+            while IFS=':' read -r id image name ports; do
+                if [ -z "$name" ] || [ -z "$image" ]; then
+                    continue
+                fi
+                
+                if ! $DOCKER ps | grep -q "$name"; then
+                    missing_containers=true
+                    ocf_log warn "Container $name is registered but not running"
+                fi
+            done < "${CONTAINER_DB}"
+            
+            if [ "$missing_containers" = "true" ]; then
+                ocf_log info "Attempting to repair missing containers (attempt $((retry_count+1))/$MAX_RETRIES)"
+                restore_containers
+                retry_count=$((retry_count+1))
+                sleep 2
+            else
+                containers_ok=true
+            fi
+        else
+            # Pas de conteneurs enregistrés, donc tout est OK
+            containers_ok=true
+        fi
+    done
+    
+    if [ "$containers_ok" = "false" ]; then
+        ocf_log err "Failed to repair containers after $MAX_RETRIES attempts"
+        return 1
+    fi
+    
+    return 0
 }
 
 docker_monitor() {
@@ -119,7 +195,7 @@ docker_monitor() {
     # Enregistrer les conteneurs actuellement en cours d'exécution
     register_containers
     
-    # DEBUG: journaliser le statut actuel
+    # Journaliser le statut actuel
     ocf_log info "MONITOR: Currently running containers: $($DOCKER ps --format '{{.Names}}' | tr '\n' ' ')"
     if [ -f "${CONTAINER_DB}" ]; then
         ocf_log info "MONITOR: Registered containers in DB: $(cat ${CONTAINER_DB} | tr '\n' ' ')"
@@ -127,33 +203,26 @@ docker_monitor() {
         ocf_log info "MONITOR: No container database found"
     fi
     
-    # Vérifier s'il y a des conteneurs en cours d'exécution
-    if ! $DOCKER ps -q | grep -q .; then
-        # S'il n'y a pas de conteneurs en cours d'exécution,
-        # mais qu'il y a des conteneurs dans la base de données
-        if [ -f "${CONTAINER_DB}" ] && [ -s "${CONTAINER_DB}" ]; then
-            ocf_log warn "No running containers, but containers are registered"
-            return $OCF_NOT_RUNNING
-        fi
+    # Vérifier et réparer les conteneurs si nécessaire
+    check_and_repair_containers
+    if [ $? -ne 0 ]; then
+        return $OCF_NOT_RUNNING
     fi
     
     return $OCF_SUCCESS
 }
 
 docker_start() {
+    # Exécuter les scripts d'initialisation
+    run_init_scripts
+    
     # Restaurer les conteneurs enregistrés
     restore_containers
     
-    # Vérifier s'il y a des conteneurs en cours d'exécution
-    if ! $DOCKER ps -q | grep -q .; then
-        # S'il n'y a pas de conteneurs mais qu'il y a des entrées dans la DB
-        if [ -f "${CONTAINER_DB}" ] && [ -s "${CONTAINER_DB}" ]; then
-            ocf_log err "Failed to restore containers"
-            return $OCF_ERR_GENERIC
-        else
-            # Pas d'erreur s'il n'y a pas de conteneurs enregistrés
-            ocf_log info "No containers registered, nothing to start"
-        fi
+    # Vérifier et réparer les conteneurs si nécessaire
+    check_and_repair_containers
+    if [ $? -ne 0 ]; then
+        return $OCF_ERR_GENERIC
     fi
     
     return $OCF_SUCCESS

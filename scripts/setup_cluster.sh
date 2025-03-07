@@ -27,6 +27,10 @@ chmod 777 /vagrant/shared
 touch /vagrant/shared/containers.db
 chmod 666 /vagrant/shared/containers.db
 
+# Créer le répertoire pour les scripts d'initialisation
+mkdir -p /vagrant/init_scripts
+chmod 755 /vagrant/init_scripts
+
 # Configuration initiale du cluster (uniquement sur filer1)
 if [[ $(hostname) == "filer1" ]]; then
     pcs host auth filer1 filer2 -u hacluster -p hacluster

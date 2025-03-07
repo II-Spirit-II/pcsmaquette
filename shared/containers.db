@@ -1,1 +1,1 @@
-2e15002ad7bc:nginx:test-nginx:0.0.0.0:8080->80/tcp, :::8080->80/tcp
+49f032cf79c8:nginx:my-app:0.0.0.0:8080->80/tcp, :::8080->80/tcp
