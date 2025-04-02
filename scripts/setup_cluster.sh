@@ -18,8 +18,8 @@ pcs cluster destroy
 
 # Installation de l'agent Docker personnalisé sur tous les nœuds
 mkdir -p /usr/lib/ocf/resource.d/heartbeat/
-cp /vagrant/templates/agent_docker_r2 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r2
-chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r2
+cp /vagrant/templates/agent_docker /usr/lib/ocf/resource.d/heartbeat/agent_docker
+chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker
 
 # Créer le répertoire partagé pour les informations de conteneurs
 mkdir -p /vagrant/shared
@@ -74,7 +74,7 @@ if [[ $(hostname) == "filer1" ]]; then
     pcs constraint location virtual_ip prefers filer2=50
 
     # Configuration de la ressource Docker
-    pcs resource create agent_docker ocf:heartbeat:agent_docker_r2 \
+    pcs resource create agent_docker ocf:heartbeat:agent_docker \
         op monitor interval=30s timeout=30s \
         op start interval=0s timeout=60s \
         op stop interval=0s timeout=60s

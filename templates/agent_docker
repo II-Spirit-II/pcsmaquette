@@ -25,7 +25,7 @@ docker_meta_data() {
     cat <<END
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-<resource-agent name="agent_docker_r2">
+<resource-agent name="agent_docker">
 <version>1.0</version>
 <longdesc lang="en">
 Resource agent for managing Docker containers

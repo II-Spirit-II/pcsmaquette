@@ -13,6 +13,12 @@ Vagrant.configure("2") do |config|
   # Configuration réseau commune
   config.vm.network "private_network", type: "dhcp"  # Pour l'interface de management
 
+  # Configuration du répertoire partagé
+  config.vm.synced_folder "shared", "/vagrant/shared",
+    owner: "root",
+    group: "root",
+    mount_options: ["dmode=777,fmode=666"]
+
   # Node 2
   config.vm.define "filer2" do |node2|
     node2.vm.hostname = "filer2"
@@ -46,8 +52,8 @@ Vagrant.configure("2") do |config|
       
       # Installation de l'agent Docker personnalisé
       mkdir -p /usr/lib/ocf/resource.d/heartbeat/
-      cp /vagrant/templates/agent_docker_r2 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r2
-      chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r2
+      cp /vagrant/templates/agent_docker /usr/lib/ocf/resource.d/heartbeat/agent_docker
+      chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker
     SHELL
     
     node2.vm.provision "file", source: "templates/corosync.conf", 
@@ -95,8 +101,8 @@ Vagrant.configure("2") do |config|
       
       # Installation de l'agent Docker personnalisé
       mkdir -p /usr/lib/ocf/resource.d/heartbeat/
-      cp /vagrant/templates/agent_docker_r2 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r2
-      chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r2
+      cp /vagrant/templates/agent_docker /usr/lib/ocf/resource.d/heartbeat/agent_docker
+      chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker
     SHELL
     
     node1.vm.provision "file", source: "templates/corosync.conf", 
