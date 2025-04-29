@@ -16,20 +16,20 @@ systemctl stop corosync pacemaker
 # Nettoyage de toute configuration existante
 pcs cluster destroy
 
-# Installation de l'agent Docker personnalisé sur tous les nœuds
+# Installation des agents Docker personnalisés sur tous les nœuds
 mkdir -p /usr/lib/ocf/resource.d/heartbeat/
-cp /vagrant/templates/agent_docker /usr/lib/ocf/resource.d/heartbeat/agent_docker
-chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker
+cp /vagrant/templates/agent_docker_r1 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r1
+cp /vagrant/templates/agent_docker_r2 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r2
+chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r1
+chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r2
 
 # Créer le répertoire partagé pour les informations de conteneurs
 mkdir -p /vagrant/shared
 chmod 777 /vagrant/shared
-touch /vagrant/shared/containers.db
-chmod 666 /vagrant/shared/containers.db
-
-# Créer le répertoire pour les scripts d'initialisation
-mkdir -p /vagrant/init_scripts
-chmod 755 /vagrant/init_scripts
+touch /vagrant/shared/containers_r1.db
+touch /vagrant/shared/containers_r2.db
+chmod 666 /vagrant/shared/containers_r1.db
+chmod 666 /vagrant/shared/containers_r2.db
 
 # Configuration initiale du cluster (uniquement sur filer1)
 if [[ $(hostname) == "filer1" ]]; then
@@ -73,33 +73,42 @@ if [[ $(hostname) == "filer1" ]]; then
     pcs constraint location virtual_ip prefers filer1=50
     pcs constraint location virtual_ip prefers filer2=50
 
-    # Configuration de la ressource Docker
-    pcs resource create agent_docker ocf:heartbeat:agent_docker \
+    # Configuration des ressources Docker r1 et r2
+    pcs resource create agent_docker_r1 ocf:heartbeat:agent_docker_r1 \
         op monitor interval=30s timeout=30s \
         op start interval=0s timeout=60s \
         op stop interval=0s timeout=60s
 
-    # Configuration du failover pour Docker
-    pcs constraint colocation add agent_docker with virtual_ip INFINITY
-    pcs constraint order virtual_ip then agent_docker
+    pcs resource create agent_docker_r2 ocf:heartbeat:agent_docker_r2 \
+        op monitor interval=30s timeout=30s \
+        op start interval=0s timeout=60s \
+        op stop interval=0s timeout=60s
 
-    # Forcer le nettoyage des ressources lors des migrations
-    pcs resource defaults resource-stickiness=0
-    pcs resource defaults migration-threshold=1
+    # Augmenter les timeouts pour les agents Docker
+    pcs resource update agent_docker_r1 op start timeout=120s
+    pcs resource update agent_docker_r1 op stop timeout=120s
+    pcs resource update agent_docker_r2 op start timeout=120s
+    pcs resource update agent_docker_r2 op stop timeout=120s
 
+    # Configurer les ressources avec des préférences de nœuds strictes
+    pcs constraint location agent_docker_r1 prefers filer1=INFINITY
+    pcs constraint location agent_docker_r2 prefers filer2=INFINITY
+
+    # Assurer que les ressources restent sur leur nœud préféré 
+    # même quand l'autre nœud revient en ligne
+    pcs resource defaults resource-stickiness=100
+    pcs resource defaults migration-threshold=3
+
+    # Important: Empêcher l'interdépendance via la virtual IP
+    # Créer des contraintes indépendantes pour chaque ressource
+    # au lieu d'une contrainte avec virtual_ip
+    
     # Attendre que les ressources soient déplacées
     sleep 30
     pcs status
-
-    # Augmenter les timeouts pour l'agent Docker
-    pcs resource update agent_docker op start timeout=120s
-    pcs resource update agent_docker op stop timeout=120s
     
     # Configurer les logs pour faciliter le débogage
     pcs property set cluster-recheck-interval=1min
-    
-    # Définir des rôles clairs pour les ressources
-    pcs constraint location agent_docker prefers filer2=INFINITY
 fi
 
 # Création du répertoire pour les agents OCF personnalisés

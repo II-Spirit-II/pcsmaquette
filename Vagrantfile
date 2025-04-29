@@ -50,10 +50,12 @@ Vagrant.configure("2") do |config|
       # Configuration de l'interface réseau pour corosync
       ip link set enp0s8 up
       
-      # Installation de l'agent Docker personnalisé
+      # Installation des agents Docker personnalisés
       mkdir -p /usr/lib/ocf/resource.d/heartbeat/
-      cp /vagrant/templates/agent_docker /usr/lib/ocf/resource.d/heartbeat/agent_docker
-      chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker
+      cp /vagrant/templates/agent_docker_r1 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r1
+      cp /vagrant/templates/agent_docker_r2 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r2
+      chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r1
+      chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r2
     SHELL
     
     node2.vm.provision "file", source: "templates/corosync.conf", 
@@ -99,10 +101,12 @@ Vagrant.configure("2") do |config|
       # Configuration de l'interface réseau pour corosync
       ip link set enp0s8 up
       
-      # Installation de l'agent Docker personnalisé
+      # Installation des agents Docker personnalisés
       mkdir -p /usr/lib/ocf/resource.d/heartbeat/
-      cp /vagrant/templates/agent_docker /usr/lib/ocf/resource.d/heartbeat/agent_docker
-      chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker
+      cp /vagrant/templates/agent_docker_r1 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r1
+      cp /vagrant/templates/agent_docker_r2 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r2
+      chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r1
+      chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r2
     SHELL
     
     node1.vm.provision "file", source: "templates/corosync.conf", 

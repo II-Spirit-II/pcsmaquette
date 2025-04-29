@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# OCF agent for Docker containers management
+# OCF agent for Docker containers management - Filer1 resources
 #
 # License: GNU General Public License (GPL)
 #
@@ -11,9 +11,11 @@
 
 # Defaults
 DOCKER=/usr/bin/docker
-CONTAINER_DB="/vagrant/shared/containers.db"
-INIT_SCRIPTS_DIR="/vagrant/init_scripts"
+CONTAINER_DB="/vagrant/shared/containers_r1.db"
 MAX_RETRIES=3
+
+# Liste des conteneurs gérés par cet agent (Filer1)
+MANAGED_CONTAINERS="dawan.fr dawan.org dj-server.org"
 
 docker_usage() {
     cat <<END
@@ -25,12 +27,12 @@ docker_meta_data() {
     cat <<END
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
-<resource-agent name="agent_docker">
+<resource-agent name="agent_docker_r1">
 <version>1.0</version>
 <longdesc lang="en">
-Resource agent for managing Docker containers
+Resource agent for managing Docker containers on Filer1
 </longdesc>
-<shortdesc lang="en">Docker containers RA</shortdesc>
+<shortdesc lang="en">Docker containers RA for Filer1</shortdesc>
 <parameters>
 </parameters>
 <actions>
@@ -43,36 +45,26 @@ Resource agent for managing Docker containers
 END
 }
 
-# Exécute les scripts d'initialisation si présents
-run_init_scripts() {
-    if [ -d "$INIT_SCRIPTS_DIR" ]; then
-        ocf_log info "Checking for initialization scripts in $INIT_SCRIPTS_DIR"
-        for script in $INIT_SCRIPTS_DIR/*.sh; do
-            if [ -x "$script" ]; then
-                ocf_log info "Running initialization script: $script"
-                $script
-                if [ $? -ne 0 ]; then
-                    ocf_log warn "Initialization script $script failed"
-                fi
-            fi
-        done
-    else
-        ocf_log info "No initialization scripts directory found"
-    fi
-}
-
 # Enregistre les conteneurs pour le failover
 register_containers() {
     if [ ! -d "$(dirname $CONTAINER_DB)" ]; then
         mkdir -p "$(dirname $CONTAINER_DB)"
     fi
     
-    # Sauvegarder les informations des conteneurs en cours d'exécution
-    $DOCKER ps --format "{{.ID}}:{{.Image}}:{{.Names}}:{{.Ports}}" > "${CONTAINER_DB}.new"
-    mv "${CONTAINER_DB}.new" "${CONTAINER_DB}"
-    chmod 666 "${CONTAINER_DB}"
+    # Sauvegarder uniquement les conteneurs gérés par cet agent
+    for container in $MANAGED_CONTAINERS; do
+        if $DOCKER ps --format "{{.ID}}:{{.Image}}:{{.Names}}:{{.Ports}}" | grep -q "$container"; then
+            $DOCKER ps --format "{{.ID}}:{{.Image}}:{{.Names}}:{{.Ports}}" | grep "$container" >> "${CONTAINER_DB}.new"
+        fi
+    done
     
-    ocf_log info "Containers registered for failover: $(cat ${CONTAINER_DB} | wc -l) containers"
+    if [ -f "${CONTAINER_DB}.new" ]; then
+        mv "${CONTAINER_DB}.new" "${CONTAINER_DB}"
+        chmod 666 "${CONTAINER_DB}"
+        ocf_log info "Containers registered for failover: $(cat ${CONTAINER_DB} | wc -l) containers"
+    else
+        ocf_log info "No managed containers running"
+    fi
 }
 
 # Récupère et restaure les conteneurs en cas de failover
@@ -82,23 +74,23 @@ restore_containers() {
         return 0
     fi
     
-    # DEBUG: afficher le contenu du fichier de la base de données
     ocf_log info "RESTORE: Container DB content: $(cat ${CONTAINER_DB})"
 
-    # Lire chaque ligne du fichier de base de données de conteneurs
     while IFS=':' read -r id image name ports; do
-        # Ignorer les lignes vides
         if [ -z "$name" ] || [ -z "$image" ]; then
+            continue
+        fi
+        
+        # Vérifier si le conteneur est géré par cet agent
+        if ! echo "$MANAGED_CONTAINERS" | grep -q "$name"; then
             continue
         fi
         
         ocf_log info "RESTORE: Processing container: $name (image: $image, ports: $ports)"
 
-        # Vérifier si le conteneur existe déjà
         if ! $DOCKER ps -a --format '{{.Names}}' | grep -q "$name"; then
             ocf_log info "Restoring container $name from image $image"
             
-            # Tirer l'image si nécessaire
             if ! $DOCKER image inspect "$image" >/dev/null 2>&1; then
                 ocf_log info "Pulling image $image"
                 $DOCKER pull "$image"
@@ -108,10 +100,8 @@ restore_containers() {
                 fi
             fi
             
-            # Extraire le mapping de port
             port_args=""
             if [ ! -z "$ports" ]; then
-                # Format simplifié pour extraire juste les ports
                 host_port=$(echo $ports | grep -oE '[0-9]+:' | tr -d ':' | head -1)
                 container_port=$(echo $ports | grep -oE ':[0-9]+/' | tr -d ':/' | head -1)
                 
@@ -120,21 +110,17 @@ restore_containers() {
                 fi
             fi
             
-            # Créer et démarrer le conteneur
             $DOCKER run -d --name "$name" $port_args "$image"
             
-            # Vérifier si le conteneur a démarré
             if ! $DOCKER ps | grep -q "$name"; then
                 ocf_log err "Failed to restore container $name"
             else
                 ocf_log info "Container $name successfully restored"
             fi
         elif ! $DOCKER ps | grep -q "$name"; then
-            # Le conteneur existe mais n'est pas en cours d'exécution
             ocf_log info "Starting existing container $name"
             $DOCKER start "$name"
             
-            # Vérifier si le conteneur a démarré
             if ! $DOCKER ps | grep -q "$name"; then
                 ocf_log err "Failed to start container $name"
             fi
@@ -148,7 +134,6 @@ check_and_repair_containers() {
     local containers_ok=false
     
     while [ $retry_count -lt $MAX_RETRIES ] && [ "$containers_ok" = "false" ]; do
-        # Vérifier si des conteneurs sont enregistrés mais pas en cours d'exécution
         if [ -f "${CONTAINER_DB}" ] && [ -s "${CONTAINER_DB}" ]; then
             local missing_containers=false
             
@@ -172,7 +157,6 @@ check_and_repair_containers() {
                 containers_ok=true
             fi
         else
-            # Pas de conteneurs enregistrés, donc tout est OK
             containers_ok=true
         fi
     done
@@ -186,16 +170,13 @@ check_and_repair_containers() {
 }
 
 docker_monitor() {
-    # Vérifier si le service Docker est en cours d'exécution
     if ! systemctl is-active docker >/dev/null 2>&1; then
         ocf_log err "Docker service is not running"
         return $OCF_ERR_GENERIC
     fi
     
-    # Enregistrer les conteneurs actuellement en cours d'exécution
     register_containers
     
-    # Journaliser le statut actuel
     ocf_log info "MONITOR: Currently running containers: $($DOCKER ps --format '{{.Names}}' | tr '\n' ' ')"
     if [ -f "${CONTAINER_DB}" ]; then
         ocf_log info "MONITOR: Registered containers in DB: $(cat ${CONTAINER_DB} | tr '\n' ' ')"
@@ -203,7 +184,6 @@ docker_monitor() {
         ocf_log info "MONITOR: No container database found"
     fi
     
-    # Vérifier et réparer les conteneurs si nécessaire
     check_and_repair_containers
     if [ $? -ne 0 ]; then
         return $OCF_NOT_RUNNING
@@ -213,26 +193,16 @@ docker_monitor() {
 }
 
 docker_start() {
-    # Exécuter les scripts d'initialisation
-    run_init_scripts
-    
-    # Restaurer les conteneurs enregistrés
     restore_containers
-    
-    # Vérifier et réparer les conteneurs si nécessaire
     check_and_repair_containers
     if [ $? -ne 0 ]; then
         return $OCF_ERR_GENERIC
     fi
-    
     return $OCF_SUCCESS
 }
 
 docker_stop() {
-    # Enregistrer les conteneurs avant de les arrêter
     register_containers
-    
-    # Arrêter tous les conteneurs
     running_containers=$($DOCKER ps -q)
     
     if [ -z "$running_containers" ]; then
@@ -242,12 +212,14 @@ docker_stop() {
     
     for container in $running_containers; do
         container_name=$($DOCKER inspect --format='{{.Name}}' $container | sed 's/^\///')
-        ocf_log info "Stopping container $container_name"
         
-        $DOCKER stop $container
-        if [ $? -ne 0 ]; then
-            ocf_log err "Failed to stop container $container_name"
-            # Continue avec les autres conteneurs
+        # Ne stopper que les conteneurs gérés par cet agent
+        if echo "$MANAGED_CONTAINERS" | grep -q "$container_name"; then
+            ocf_log info "Stopping container $container_name"
+            $DOCKER stop $container
+            if [ $? -ne 0 ]; then
+                ocf_log err "Failed to stop container $container_name"
+            fi
         fi
     done
     

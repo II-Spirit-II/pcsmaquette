@@ -1,0 +1,33 @@
+# Reconstruire et démarrer les machines
+vagrant destroy -f 
+vagrant up
+
+# Se connecter à filer1 et vérifier l'état
+vagrant ssh filer1
+sudo pcs status
+
+# Lancer les conteneurs de test
+sudo docker run -d --name dawan.fr nginx
+sudo docker run -d --name dawan.org nginx
+sudo docker run -d --name dj-server.org nginx
+
+# Se connecter à filer2 et lancer les conteneurs
+vagrant ssh filer2
+sudo docker run -d --name dawan.tv nginx
+sudo docker run -d --name nuage.dawan.fr nginx
+sudo docker run -d --name formateur.dawan.fr nginx
+
+# Test du scénario de failover:
+# 1. Mettre filer2 en maintenance
+sudo pcs node standby filer2
+
+# 2. Vérifier que les conteneurs r2 migrent vers filer1
+sudo pcs status
+sudo docker ps
+
+# 3. Remettre filer2 en service
+sudo pcs node unstandby filer2
+
+# 4. Vérifier que les conteneurs reviennent correctement
+sudo pcs status
+sudo docker ps
