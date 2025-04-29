@@ -11,12 +11,10 @@
 
 # Defaults
 DOCKER_COMPOSE=/usr/bin/docker-compose
-COMPOSE_DB="/vagrant/shared/compose_r1.db"
 MAX_RETRIES=3
 
-# Liste des projets Compose gérés par cet agent (Filer1)
-MANAGED_PROJECTS="dawan.fr dawan.org dj-server.org"
-COMPOSE_PATH="/vagrant/compose/r1"
+# Chemin du répertoire Docker Compose pour r1
+COMPOSE_PATH="/opt/compose/r1"
 
 docker_usage() {
     cat <<END
@@ -46,107 +44,79 @@ Resource agent for managing Docker Compose projects on Filer1
 END
 }
 
-# Enregistre les projets pour le failover
-register_projects() {
-    if [ ! -d "$(dirname $COMPOSE_DB)" ]; then
-        mkdir -p "$(dirname $COMPOSE_DB)"
+# Vérifie l'existence du projet Compose
+check_compose_exists() {
+    if [ ! -d "$COMPOSE_PATH" ] || [ ! -f "${COMPOSE_PATH}/docker-compose.yml" ]; then
+        ocf_log err "Docker Compose project not found at $COMPOSE_PATH"
+        return 1
     fi
-    
-    # Vider la base existante
-    > "${COMPOSE_DB}.new"
-    
-    if [ -d "$COMPOSE_PATH" ] && [ -f "${COMPOSE_PATH}/docker-compose.yml" ]; then
-        echo "r1:${COMPOSE_PATH}" >> "${COMPOSE_DB}.new"
-    fi
-    
-    if [ -f "${COMPOSE_DB}.new" ]; then
-        mv "${COMPOSE_DB}.new" "${COMPOSE_DB}"
-        chmod 666 "${COMPOSE_DB}"
-        ocf_log info "Compose projects registered for failover: $(cat ${COMPOSE_DB} | wc -l) projects"
-    else
-        ocf_log info "No managed Compose projects found"
-    fi
+    return 0
 }
 
-# Récupère et restaure les projets en cas de failover
-restore_projects() {
-    if [ ! -f "${COMPOSE_DB}" ]; then
-        ocf_log info "No compose database found, nothing to restore"
+# Démarre le projet Docker Compose
+start_compose() {
+    check_compose_exists || return 1
+    
+    ocf_log info "Starting Docker Compose project at $COMPOSE_PATH"
+    cd "$COMPOSE_PATH"
+    $DOCKER_COMPOSE up -d
+    
+    if [ $? -ne 0 ]; then
+        ocf_log err "Failed to start Docker Compose project"
+        return 1
+    fi
+    
+    ocf_log info "Docker Compose project successfully started"
+    return 0
+}
+
+# Arrête le projet Docker Compose
+stop_compose() {
+    if [ ! -d "$COMPOSE_PATH" ] || [ ! -f "${COMPOSE_PATH}/docker-compose.yml" ]; then
+        ocf_log info "Docker Compose project not found at $COMPOSE_PATH, nothing to stop"
         return 0
     fi
     
-    ocf_log info "RESTORE: Compose DB content: $(cat ${COMPOSE_DB})"
+    ocf_log info "Stopping Docker Compose project at $COMPOSE_PATH"
+    cd "$COMPOSE_PATH"
+    $DOCKER_COMPOSE down
     
-    while IFS=':' read -r project_name project_path; do
-        if [ -z "$project_name" ] || [ -z "$project_path" ]; then
-            continue
-        fi
-        
-        ocf_log info "RESTORE: Processing compose project: $project_name (path: $project_path)"
-        
-        if [ -d "$project_path" ] && [ -f "${project_path}/docker-compose.yml" ]; then
-            ocf_log info "Starting compose project $project_name at $project_path"
-            
-            # Se déplacer dans le répertoire du projet et lancer docker-compose up
-            cd "$project_path"
-            $DOCKER_COMPOSE up -d
-            
-            if [ $? -ne 0 ]; then
-                ocf_log err "Failed to start compose project $project_name"
-            else
-                ocf_log info "Compose project $project_name successfully started"
-            fi
-        else
-            ocf_log err "Compose project directory $project_path not found or missing docker-compose.yml"
-        fi
-    done < "${COMPOSE_DB}"
+    if [ $? -ne 0 ]; then
+        ocf_log err "Failed to stop Docker Compose project"
+        return 1
+    fi
+    
+    ocf_log info "Docker Compose project successfully stopped"
+    return 0
 }
 
-# Vérifie l'état des projets et tente de les réparer si nécessaire
-check_and_repair_projects() {
+# Vérifie et répare le projet si nécessaire
+check_and_repair_project() {
     local retry_count=0
-    local projects_ok=false
+    local project_ok=false
     
-    while [ $retry_count -lt $MAX_RETRIES ] && [ "$projects_ok" = "false" ]; do
-        if [ -f "${COMPOSE_DB}" ] && [ -s "${COMPOSE_DB}" ]; then
-            local missing_projects=false
+    while [ $retry_count -lt $MAX_RETRIES ] && [ "$project_ok" = "false" ]; do
+        check_compose_exists || return 1
+        
+        cd "$COMPOSE_PATH"
+        # Vérifier si tous les services sont en cours d'exécution
+        RUNNING_SERVICES=$($DOCKER_COMPOSE ps --services --filter "status=running" | wc -l)
+        TOTAL_SERVICES=$($DOCKER_COMPOSE ps --services | wc -l)
+        
+        if [ $RUNNING_SERVICES -lt $TOTAL_SERVICES ]; then
+            ocf_log warn "Some Docker Compose services are not running correctly"
+            ocf_log info "Attempting to repair services (attempt $((retry_count+1))/$MAX_RETRIES)"
             
-            while IFS=':' read -r project_name project_path; do
-                if [ -z "$project_name" ] || [ -z "$project_path" ]; then
-                    continue
-                fi
-                
-                if [ -d "$project_path" ]; then
-                    cd "$project_path"
-                    # Vérifier si tous les services sont en cours d'exécution
-                    RUNNING_SERVICES=$($DOCKER_COMPOSE ps --services --filter "status=running" | wc -l)
-                    TOTAL_SERVICES=$($DOCKER_COMPOSE ps --services | wc -l)
-                    
-                    if [ $RUNNING_SERVICES -lt $TOTAL_SERVICES ]; then
-                        missing_projects=true
-                        ocf_log warn "Compose project $project_name is registered but not all services are running"
-                    fi
-                else
-                    missing_projects=true
-                    ocf_log warn "Compose project directory $project_path not found"
-                fi
-            done < "${COMPOSE_DB}"
-            
-            if [ "$missing_projects" = "true" ]; then
-                ocf_log info "Attempting to repair missing compose projects (attempt $((retry_count+1))/$MAX_RETRIES)"
-                restore_projects
-                retry_count=$((retry_count+1))
-                sleep 5
-            else
-                projects_ok=true
-            fi
+            $DOCKER_COMPOSE up -d
+            retry_count=$((retry_count+1))
+            sleep 5
         else
-            projects_ok=true
+            project_ok=true
         fi
     done
     
-    if [ "$projects_ok" = "false" ]; then
-        ocf_log err "Failed to repair compose projects after $MAX_RETRIES attempts"
+    if [ "$project_ok" = "false" ]; then
+        ocf_log err "Failed to repair Docker Compose project after $MAX_RETRIES attempts"
         return 1
     fi
     
@@ -159,11 +129,11 @@ docker_monitor() {
         return $OCF_ERR_GENERIC
     fi
     
-    register_projects
+    check_compose_exists || return $OCF_NOT_RUNNING
     
-    ocf_log info "MONITOR: Currently registered compose projects: $(cat ${COMPOSE_DB} 2>/dev/null | tr '\n' ' ')"
+    ocf_log info "MONITOR: Checking Docker Compose project at $COMPOSE_PATH"
     
-    check_and_repair_projects
+    check_and_repair_project
     if [ $? -ne 0 ]; then
         return $OCF_NOT_RUNNING
     fi
@@ -172,37 +142,24 @@ docker_monitor() {
 }
 
 docker_start() {
-    restore_projects
-    check_and_repair_projects
+    start_compose
     if [ $? -ne 0 ]; then
         return $OCF_ERR_GENERIC
     fi
+    
+    check_and_repair_project
+    if [ $? -ne 0 ]; then
+        return $OCF_ERR_GENERIC
+    fi
+    
     return $OCF_SUCCESS
 }
 
 docker_stop() {
-    register_projects
-    
-    if [ ! -f "${COMPOSE_DB}" ]; then
-        ocf_log info "No compose projects to stop"
-        return $OCF_SUCCESS
+    stop_compose
+    if [ $? -ne 0 ]; then
+        return $OCF_ERR_GENERIC
     fi
-    
-    while IFS=':' read -r project_name project_path; do
-        if [ -z "$project_name" ] || [ -z "$project_path" ]; then
-            continue
-        fi
-        
-        if [ -d "$project_path" ] && [ -f "${project_path}/docker-compose.yml" ]; then
-            ocf_log info "Stopping compose project $project_name"
-            cd "$project_path"
-            $DOCKER_COMPOSE down
-            
-            if [ $? -ne 0 ]; then
-                ocf_log err "Failed to stop compose project $project_name"
-            fi
-        fi
-    done < "${COMPOSE_DB}"
     
     return $OCF_SUCCESS
 }

@@ -25,20 +25,18 @@ chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r2
 
 # Installer Docker Compose si nécessaire
 if ! command -v docker-compose &> /dev/null; then
-    # Installer Docker Compose directement depuis GitHub
-    COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d\" -f4)
-    curl -L "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    # Installer Docker Compose avec une version spécifique
+    mkdir -p /usr/local/bin
+    curl -L "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)" -o /usr/local/bin/docker-compose
     chmod +x /usr/local/bin/docker-compose
     ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
 fi
 
-# Créer le répertoire partagé pour les informations de compose
-mkdir -p /vagrant/shared
-chmod 777 /vagrant/shared
-touch /vagrant/shared/compose_r1.db
-touch /vagrant/shared/compose_r2.db
-chmod 666 /vagrant/shared/compose_r1.db
-chmod 666 /vagrant/shared/compose_r2.db
+# Créer les répertoires pour les projets Docker Compose
+# En production, ce serait /opt/compose mais pour Vagrant on utilise /vagrant
+mkdir -p /vagrant/compose/r1
+mkdir -p /vagrant/compose/r2
+ln -sf /vagrant/compose /opt/compose
 
 # Configuration initiale du cluster (uniquement sur filer1)
 if [[ $(hostname) == "filer1" ]]; then
