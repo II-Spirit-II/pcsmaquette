@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# OCF agent for Docker containers management - Filer1 resources
+# OCF agent for Docker Compose management - Filer1 resources
 #
 # License: GNU General Public License (GPL)
 #
@@ -10,12 +10,13 @@
 . ${OCF_FUNCTIONS_DIR}/ocf-shellfuncs
 
 # Defaults
-DOCKER=/usr/bin/docker
-CONTAINER_DB="/vagrant/shared/containers_r1.db"
+DOCKER_COMPOSE=/usr/bin/docker-compose
+COMPOSE_DB="/vagrant/shared/compose_r1.db"
 MAX_RETRIES=3
 
-# Liste des conteneurs gérés par cet agent (Filer1)
-MANAGED_CONTAINERS="dawan.fr dawan.org dj-server.org"
+# Liste des projets Compose gérés par cet agent (Filer1)
+MANAGED_PROJECTS="dawan.fr dawan.org dj-server.org"
+COMPOSE_PATH="/vagrant/compose/r1"
 
 docker_usage() {
     cat <<END
@@ -30,14 +31,14 @@ docker_meta_data() {
 <resource-agent name="agent_docker_r1">
 <version>1.0</version>
 <longdesc lang="en">
-Resource agent for managing Docker containers on Filer1
+Resource agent for managing Docker Compose projects on Filer1
 </longdesc>
-<shortdesc lang="en">Docker containers RA for Filer1</shortdesc>
+<shortdesc lang="en">Docker Compose RA for Filer1</shortdesc>
 <parameters>
 </parameters>
 <actions>
-<action name="start"        timeout="60s" />
-<action name="stop"         timeout="60s" />
+<action name="start"        timeout="120s" />
+<action name="stop"         timeout="120s" />
 <action name="monitor"      timeout="30s" interval="30s" depth="0" />
 <action name="meta-data"    timeout="5s" />
 </actions>
@@ -45,124 +46,107 @@ Resource agent for managing Docker containers on Filer1
 END
 }
 
-# Enregistre les conteneurs pour le failover
-register_containers() {
-    if [ ! -d "$(dirname $CONTAINER_DB)" ]; then
-        mkdir -p "$(dirname $CONTAINER_DB)"
+# Enregistre les projets pour le failover
+register_projects() {
+    if [ ! -d "$(dirname $COMPOSE_DB)" ]; then
+        mkdir -p "$(dirname $COMPOSE_DB)"
     fi
     
-    # Sauvegarder uniquement les conteneurs gérés par cet agent
-    for container in $MANAGED_CONTAINERS; do
-        if $DOCKER ps --format "{{.ID}}:{{.Image}}:{{.Names}}:{{.Ports}}" | grep -q "$container"; then
-            $DOCKER ps --format "{{.ID}}:{{.Image}}:{{.Names}}:{{.Ports}}" | grep "$container" >> "${CONTAINER_DB}.new"
-        fi
-    done
+    # Vider la base existante
+    > "${COMPOSE_DB}.new"
     
-    if [ -f "${CONTAINER_DB}.new" ]; then
-        mv "${CONTAINER_DB}.new" "${CONTAINER_DB}"
-        chmod 666 "${CONTAINER_DB}"
-        ocf_log info "Containers registered for failover: $(cat ${CONTAINER_DB} | wc -l) containers"
+    if [ -d "$COMPOSE_PATH" ] && [ -f "${COMPOSE_PATH}/docker-compose.yml" ]; then
+        echo "r1:${COMPOSE_PATH}" >> "${COMPOSE_DB}.new"
+    fi
+    
+    if [ -f "${COMPOSE_DB}.new" ]; then
+        mv "${COMPOSE_DB}.new" "${COMPOSE_DB}"
+        chmod 666 "${COMPOSE_DB}"
+        ocf_log info "Compose projects registered for failover: $(cat ${COMPOSE_DB} | wc -l) projects"
     else
-        ocf_log info "No managed containers running"
+        ocf_log info "No managed Compose projects found"
     fi
 }
 
-# Récupère et restaure les conteneurs en cas de failover
-restore_containers() {
-    if [ ! -f "${CONTAINER_DB}" ]; then
-        ocf_log info "No container database found, nothing to restore"
+# Récupère et restaure les projets en cas de failover
+restore_projects() {
+    if [ ! -f "${COMPOSE_DB}" ]; then
+        ocf_log info "No compose database found, nothing to restore"
         return 0
     fi
     
-    ocf_log info "RESTORE: Container DB content: $(cat ${CONTAINER_DB})"
-
-    while IFS=':' read -r id image name ports; do
-        if [ -z "$name" ] || [ -z "$image" ]; then
-            continue
-        fi
-        
-        # Vérifier si le conteneur est géré par cet agent
-        if ! echo "$MANAGED_CONTAINERS" | grep -q "$name"; then
-            continue
-        fi
-        
-        ocf_log info "RESTORE: Processing container: $name (image: $image, ports: $ports)"
-
-        if ! $DOCKER ps -a --format '{{.Names}}' | grep -q "$name"; then
-            ocf_log info "Restoring container $name from image $image"
-            
-            if ! $DOCKER image inspect "$image" >/dev/null 2>&1; then
-                ocf_log info "Pulling image $image"
-                $DOCKER pull "$image"
-                if [ $? -ne 0 ]; then
-                    ocf_log err "Failed to pull image $image"
-                    continue
-                fi
-            fi
-            
-            port_args=""
-            if [ ! -z "$ports" ]; then
-                host_port=$(echo $ports | grep -oE '[0-9]+:' | tr -d ':' | head -1)
-                container_port=$(echo $ports | grep -oE ':[0-9]+/' | tr -d ':/' | head -1)
-                
-                if [ ! -z "$host_port" ] && [ ! -z "$container_port" ]; then
-                    port_args="-p $host_port:$container_port"
-                fi
-            fi
-            
-            $DOCKER run -d --name "$name" $port_args "$image"
-            
-            if ! $DOCKER ps | grep -q "$name"; then
-                ocf_log err "Failed to restore container $name"
-            else
-                ocf_log info "Container $name successfully restored"
-            fi
-        elif ! $DOCKER ps | grep -q "$name"; then
-            ocf_log info "Starting existing container $name"
-            $DOCKER start "$name"
-            
-            if ! $DOCKER ps | grep -q "$name"; then
-                ocf_log err "Failed to start container $name"
-            fi
-        fi
-    done < "${CONTAINER_DB}"
-}
-
-# Vérifie l'état des conteneurs et tente de les réparer si nécessaire
-check_and_repair_containers() {
-    local retry_count=0
-    local containers_ok=false
+    ocf_log info "RESTORE: Compose DB content: $(cat ${COMPOSE_DB})"
     
-    while [ $retry_count -lt $MAX_RETRIES ] && [ "$containers_ok" = "false" ]; do
-        if [ -f "${CONTAINER_DB}" ] && [ -s "${CONTAINER_DB}" ]; then
-            local missing_containers=false
+    while IFS=':' read -r project_name project_path; do
+        if [ -z "$project_name" ] || [ -z "$project_path" ]; then
+            continue
+        fi
+        
+        ocf_log info "RESTORE: Processing compose project: $project_name (path: $project_path)"
+        
+        if [ -d "$project_path" ] && [ -f "${project_path}/docker-compose.yml" ]; then
+            ocf_log info "Starting compose project $project_name at $project_path"
             
-            while IFS=':' read -r id image name ports; do
-                if [ -z "$name" ] || [ -z "$image" ]; then
-                    continue
-                fi
-                
-                if ! $DOCKER ps | grep -q "$name"; then
-                    missing_containers=true
-                    ocf_log warn "Container $name is registered but not running"
-                fi
-            done < "${CONTAINER_DB}"
+            # Se déplacer dans le répertoire du projet et lancer docker-compose up
+            cd "$project_path"
+            $DOCKER_COMPOSE up -d
             
-            if [ "$missing_containers" = "true" ]; then
-                ocf_log info "Attempting to repair missing containers (attempt $((retry_count+1))/$MAX_RETRIES)"
-                restore_containers
-                retry_count=$((retry_count+1))
-                sleep 2
+            if [ $? -ne 0 ]; then
+                ocf_log err "Failed to start compose project $project_name"
             else
-                containers_ok=true
+                ocf_log info "Compose project $project_name successfully started"
             fi
         else
-            containers_ok=true
+            ocf_log err "Compose project directory $project_path not found or missing docker-compose.yml"
+        fi
+    done < "${COMPOSE_DB}"
+}
+
+# Vérifie l'état des projets et tente de les réparer si nécessaire
+check_and_repair_projects() {
+    local retry_count=0
+    local projects_ok=false
+    
+    while [ $retry_count -lt $MAX_RETRIES ] && [ "$projects_ok" = "false" ]; do
+        if [ -f "${COMPOSE_DB}" ] && [ -s "${COMPOSE_DB}" ]; then
+            local missing_projects=false
+            
+            while IFS=':' read -r project_name project_path; do
+                if [ -z "$project_name" ] || [ -z "$project_path" ]; then
+                    continue
+                fi
+                
+                if [ -d "$project_path" ]; then
+                    cd "$project_path"
+                    # Vérifier si tous les services sont en cours d'exécution
+                    RUNNING_SERVICES=$($DOCKER_COMPOSE ps --services --filter "status=running" | wc -l)
+                    TOTAL_SERVICES=$($DOCKER_COMPOSE ps --services | wc -l)
+                    
+                    if [ $RUNNING_SERVICES -lt $TOTAL_SERVICES ]; then
+                        missing_projects=true
+                        ocf_log warn "Compose project $project_name is registered but not all services are running"
+                    fi
+                else
+                    missing_projects=true
+                    ocf_log warn "Compose project directory $project_path not found"
+                fi
+            done < "${COMPOSE_DB}"
+            
+            if [ "$missing_projects" = "true" ]; then
+                ocf_log info "Attempting to repair missing compose projects (attempt $((retry_count+1))/$MAX_RETRIES)"
+                restore_projects
+                retry_count=$((retry_count+1))
+                sleep 5
+            else
+                projects_ok=true
+            fi
+        else
+            projects_ok=true
         fi
     done
     
-    if [ "$containers_ok" = "false" ]; then
-        ocf_log err "Failed to repair containers after $MAX_RETRIES attempts"
+    if [ "$projects_ok" = "false" ]; then
+        ocf_log err "Failed to repair compose projects after $MAX_RETRIES attempts"
         return 1
     fi
     
@@ -175,16 +159,11 @@ docker_monitor() {
         return $OCF_ERR_GENERIC
     fi
     
-    register_containers
+    register_projects
     
-    ocf_log info "MONITOR: Currently running containers: $($DOCKER ps --format '{{.Names}}' | tr '\n' ' ')"
-    if [ -f "${CONTAINER_DB}" ]; then
-        ocf_log info "MONITOR: Registered containers in DB: $(cat ${CONTAINER_DB} | tr '\n' ' ')"
-    else
-        ocf_log info "MONITOR: No container database found"
-    fi
+    ocf_log info "MONITOR: Currently registered compose projects: $(cat ${COMPOSE_DB} 2>/dev/null | tr '\n' ' ')"
     
-    check_and_repair_containers
+    check_and_repair_projects
     if [ $? -ne 0 ]; then
         return $OCF_NOT_RUNNING
     fi
@@ -193,8 +172,8 @@ docker_monitor() {
 }
 
 docker_start() {
-    restore_containers
-    check_and_repair_containers
+    restore_projects
+    check_and_repair_projects
     if [ $? -ne 0 ]; then
         return $OCF_ERR_GENERIC
     fi
@@ -202,26 +181,28 @@ docker_start() {
 }
 
 docker_stop() {
-    register_containers
-    running_containers=$($DOCKER ps -q)
+    register_projects
     
-    if [ -z "$running_containers" ]; then
-        ocf_log info "No running containers to stop"
+    if [ ! -f "${COMPOSE_DB}" ]; then
+        ocf_log info "No compose projects to stop"
         return $OCF_SUCCESS
     fi
     
-    for container in $running_containers; do
-        container_name=$($DOCKER inspect --format='{{.Name}}' $container | sed 's/^\///')
+    while IFS=':' read -r project_name project_path; do
+        if [ -z "$project_name" ] || [ -z "$project_path" ]; then
+            continue
+        fi
         
-        # Ne stopper que les conteneurs gérés par cet agent
-        if echo "$MANAGED_CONTAINERS" | grep -q "$container_name"; then
-            ocf_log info "Stopping container $container_name"
-            $DOCKER stop $container
+        if [ -d "$project_path" ] && [ -f "${project_path}/docker-compose.yml" ]; then
+            ocf_log info "Stopping compose project $project_name"
+            cd "$project_path"
+            $DOCKER_COMPOSE down
+            
             if [ $? -ne 0 ]; then
-                ocf_log err "Failed to stop container $container_name"
+                ocf_log err "Failed to stop compose project $project_name"
             fi
         fi
-    done
+    done < "${COMPOSE_DB}"
     
     return $OCF_SUCCESS
 }

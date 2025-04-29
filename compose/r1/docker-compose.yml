@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  dawan.fr:
+    image: nginx:alpine
+    container_name: dawan.fr
+    restart: unless-stopped
+    ports:
+      - "8081:80"
+    environment:
+      - NGINX_HOST=dawan.fr
+  
+  dawan.org:
+    image: httpd:alpine
+    container_name: dawan.org
+    restart: unless-stopped
+    ports:
+      - "8082:80"
+  
+  dj-server.org:
+    image: traefik:latest
+    container_name: dj-server.org
+    restart: unless-stopped
+    ports:
+      - "8083:80" 

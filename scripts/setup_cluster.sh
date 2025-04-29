@@ -23,13 +23,22 @@ cp /vagrant/templates/agent_docker_r2 /usr/lib/ocf/resource.d/heartbeat/agent_do
 chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r1
 chmod 755 /usr/lib/ocf/resource.d/heartbeat/agent_docker_r2
 
-# Créer le répertoire partagé pour les informations de conteneurs
+# Installer Docker Compose si nécessaire
+if ! command -v docker-compose &> /dev/null; then
+    # Installer Docker Compose directement depuis GitHub
+    COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d\" -f4)
+    curl -L "https://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
+    ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+fi
+
+# Créer le répertoire partagé pour les informations de compose
 mkdir -p /vagrant/shared
 chmod 777 /vagrant/shared
-touch /vagrant/shared/containers_r1.db
-touch /vagrant/shared/containers_r2.db
-chmod 666 /vagrant/shared/containers_r1.db
-chmod 666 /vagrant/shared/containers_r2.db
+touch /vagrant/shared/compose_r1.db
+touch /vagrant/shared/compose_r2.db
+chmod 666 /vagrant/shared/compose_r1.db
+chmod 666 /vagrant/shared/compose_r2.db
 
 # Configuration initiale du cluster (uniquement sur filer1)
 if [[ $(hostname) == "filer1" ]]; then
@@ -73,22 +82,16 @@ if [[ $(hostname) == "filer1" ]]; then
     pcs constraint location virtual_ip prefers filer1=50
     pcs constraint location virtual_ip prefers filer2=50
 
-    # Configuration des ressources Docker r1 et r2
+    # Configuration des ressources Docker Compose r1 et r2
     pcs resource create agent_docker_r1 ocf:heartbeat:agent_docker_r1 \
         op monitor interval=30s timeout=30s \
-        op start interval=0s timeout=60s \
-        op stop interval=0s timeout=60s
+        op start interval=0s timeout=120s \
+        op stop interval=0s timeout=120s
 
     pcs resource create agent_docker_r2 ocf:heartbeat:agent_docker_r2 \
         op monitor interval=30s timeout=30s \
-        op start interval=0s timeout=60s \
-        op stop interval=0s timeout=60s
-
-    # Augmenter les timeouts pour les agents Docker
-    pcs resource update agent_docker_r1 op start timeout=120s
-    pcs resource update agent_docker_r1 op stop timeout=120s
-    pcs resource update agent_docker_r2 op start timeout=120s
-    pcs resource update agent_docker_r2 op stop timeout=120s
+        op start interval=0s timeout=120s \
+        op stop interval=0s timeout=120s
 
     # Configurer les ressources avec des préférences de nœuds strictes
     pcs constraint location agent_docker_r1 prefers filer1=INFINITY

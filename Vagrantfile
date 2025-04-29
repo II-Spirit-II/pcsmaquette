@@ -19,6 +19,13 @@ Vagrant.configure("2") do |config|
     group: "root",
     mount_options: ["dmode=777,fmode=666"]
 
+  # Configuration du répertoire compose
+  config.vm.synced_folder "compose", "/vagrant/compose",
+    owner: "root",
+    group: "root",
+    mount_options: ["dmode=755,fmode=644"],
+    create: true
+
   # Node 2
   config.vm.define "filer2" do |node2|
     node2.vm.hostname = "filer2"
@@ -28,7 +35,15 @@ Vagrant.configure("2") do |config|
     
     node2.vm.provision "shell", inline: <<-SHELL
       apt-get update
-      apt-get install -y pacemaker corosync crmsh pcs fence-agents docker.io resource-agents
+      apt-get install -y pacemaker corosync crmsh pcs fence-agents docker.io resource-agents curl
+      
+      # Installation de Docker Compose
+      if ! command -v docker-compose &> /dev/null; then
+        mkdir -p /usr/local/bin
+        curl -L "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)" -o /usr/local/bin/docker-compose
+        chmod +x /usr/local/bin/docker-compose
+        ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+      fi
       
       # Désactiver ufw car il interfère avec corosync
       systemctl stop ufw
@@ -79,7 +94,15 @@ Vagrant.configure("2") do |config|
     
     node1.vm.provision "shell", inline: <<-SHELL
       apt-get update
-      apt-get install -y pacemaker corosync crmsh pcs fence-agents docker.io resource-agents
+      apt-get install -y pacemaker corosync crmsh pcs fence-agents docker.io resource-agents curl
+      
+      # Installation de Docker Compose
+      if ! command -v docker-compose &> /dev/null; then
+        mkdir -p /usr/local/bin
+        curl -L "https://github.com/docker/compose/releases/download/v2.24.5/docker-compose-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)" -o /usr/local/bin/docker-compose
+        chmod +x /usr/local/bin/docker-compose
+        ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
+      fi
       
       # Désactiver ufw car il interfère avec corosync
       systemctl stop ufw

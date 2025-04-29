@@ -1,0 +1,27 @@
+version: '3'
+
+services:
+  dawan.tv:
+    image: redis:alpine
+    container_name: dawan.tv
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+  
+  nuage.dawan.fr:
+    image: postgres:alpine
+    container_name: nuage.dawan.fr
+    restart: unless-stopped
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=user
+      - POSTGRES_DB=db
+    ports:
+      - "5432:5432"
+  
+  formateur.dawan.fr:
+    image: mongo:latest
+    container_name: formateur.dawan.fr
+    restart: unless-stopped
+    ports:
+      - "27017:27017" 
