@@ -1,0 +1,17 @@
+services:
+  jehannorg:
+    container_name: jehannorg
+    image: nginx:latest
+    restart: unless-stopped
+    ports:
+      - "8085:80"
+    volumes:
+      - type: bind
+        source: ../volumes
+        target: /usr/share/nginx/html
+    networks:
+      - jehannorg-network
+
+networks:
+  jehannorg-network:
+    driver: bridge 
