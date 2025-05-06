@@ -68,6 +68,12 @@ if [[ $(hostname) == "filer1" ]]; then
     pcs property set pe-input-series-max=1000
     pcs property set pe-error-series-max=1000
     
+    # Assurer que les ressources restent sur leur nœud préféré 
+    # même quand l'autre nœud revient en ligne
+    # Déplacé ici pour définir les défauts avant la création des ressources
+    pcs resource defaults update resource-stickiness=100
+    pcs resource defaults update migration-threshold=3
+    
     # Configuration du STONITH comme en production
     pcs stonith create stonith-dummy fence_dummy \
         pcmk_host_list="filer2,filer1"
@@ -95,15 +101,8 @@ if [[ $(hostname) == "filer1" ]]; then
     pcs constraint location agent_docker_r1 prefers filer1=INFINITY
     pcs constraint location agent_docker_r2 prefers filer2=INFINITY
 
-    # Assurer que les ressources restent sur leur nœud préféré 
-    # même quand l'autre nœud revient en ligne
-    pcs resource defaults resource-stickiness=100
-    pcs resource defaults migration-threshold=3
-
     # Important: Empêcher l'interdépendance via la virtual IP
     # Créer des contraintes indépendantes pour chaque ressource
-    # au lieu d'une contrainte avec virtual_ip
-    
     # Attendre que les ressources soient déplacées
     sleep 30
     pcs status

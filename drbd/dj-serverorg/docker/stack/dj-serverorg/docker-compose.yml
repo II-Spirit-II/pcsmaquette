@@ -3,6 +3,6 @@ version: '3.8'
 services:
   dj_serverorg_service:
     image: busybox:latest
-    container_name: dj_serverorg_container
+    container_name: dj_serverorg
     command: ["tail", "-f", "/dev/null"] # Garde le conteneur actif
     restart: unless-stopped

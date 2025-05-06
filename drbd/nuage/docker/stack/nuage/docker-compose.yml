@@ -3,6 +3,6 @@ version: '3.8'
 services:
   nuage_service:
     image: busybox:latest
-    container_name: nuage_container
+    container_name: nuage
     command: ["tail", "-f", "/dev/null"] # Garde le conteneur actif
     restart: unless-stopped

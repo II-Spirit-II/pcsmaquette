@@ -3,6 +3,6 @@ version: '3.8'
 services:
   jehannorg_service:
     image: busybox:latest
-    container_name: jehannorg_container
+    container_name: jehannorg
     command: ["tail", "-f", "/dev/null"] # Garde le conteneur actif
     restart: unless-stopped

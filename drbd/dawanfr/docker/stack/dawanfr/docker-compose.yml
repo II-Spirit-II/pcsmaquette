@@ -3,6 +3,6 @@ version: '3.8'
 services:
   dawanfr_service:
     image: busybox:latest
-    container_name: dawanfr_container
+    container_name: dawanfr
     command: ["tail", "-f", "/dev/null"] # Garde le conteneur actif
     restart: unless-stopped

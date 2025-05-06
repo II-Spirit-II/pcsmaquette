@@ -3,6 +3,6 @@ version: '3.8'
 services:
   dawantv_service:
     image: busybox:latest
-    container_name: dawantv_container
+    container_name: dawantv
     command: ["tail", "-f", "/dev/null"] # Garde le conteneur actif
     restart: unless-stopped
