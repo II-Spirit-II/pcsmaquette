@@ -32,11 +32,11 @@ if ! command -v docker-compose &> /dev/null; then
     ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
 fi
 
-# Créer les répertoires pour les projets Docker Compose
-# En production, ce serait /opt/compose mais pour Vagrant on utilise /vagrant
-mkdir -p /vagrant/compose/r1
-mkdir -p /vagrant/compose/r2
-ln -sf /vagrant/compose /opt/compose
+# Le répertoire /drbd est maintenant monté via Vagrant synced_folder
+# Suppression des anciennes lignes liées à /opt/compose et /vagrant/compose
+# mkdir -p /vagrant/compose/r1
+# mkdir -p /vagrant/compose/r2
+# ln -sf /vagrant/compose /opt/compose
 
 # Configuration initiale du cluster (uniquement sur filer1)
 if [[ $(hostname) == "filer1" ]]; then
@@ -112,5 +112,5 @@ if [[ $(hostname) == "filer1" ]]; then
     pcs property set cluster-recheck-interval=1min
 fi
 
-# Création du répertoire pour les agents OCF personnalisés
+# Création du répertoire pour les agents OCF personnalisés (redondant avec Vagrantfile mais sans danger)
 mkdir -p /usr/lib/ocf/resource.d/heartbeat/ 

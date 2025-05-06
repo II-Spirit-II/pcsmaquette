@@ -13,11 +13,12 @@ Vagrant.configure("2") do |config|
   # Configuration réseau commune
   config.vm.network "private_network", type: "dhcp"  # Pour l'interface de management
 
-  # Configuration du répertoire compose
-  config.vm.synced_folder "compose", "/vagrant/compose",
-    owner: "root",
-    group: "root",
-    mount_options: ["dmode=755,fmode=644"],
+  # Configuration du répertoire drbd (remplace compose)
+  # Assurez-vous que le répertoire 'drbd' existe localement à la racine du projet Vagrant
+  config.vm.synced_folder "drbd", "/drbd",
+    owner: "root", # Ajustez si nécessaire selon l'utilisation dans les conteneurs
+    group: "root", # Ajustez si nécessaire
+    mount_options: ["dmode=775,fmode=664"], # Permissions potentiellement plus ouvertes pour drbd
     create: true
 
   # Node 2

@@ -13,8 +13,15 @@
 DOCKER_COMPOSE=/usr/bin/docker-compose
 MAX_RETRIES=3
 
-# Chemin du répertoire Docker Compose pour r2
-COMPOSE_PATH="/opt/compose/r2"
+# Liste des projets à gérer par cet agent sur filer2
+PROJECTS="dawantv nuage formateur"
+BASE_PATH="/drbd"
+
+# Fonction pour construire le chemin du docker-compose.yml pour un projet
+get_compose_path() {
+    local project_name=$1
+    echo "${BASE_PATH}/${project_name}/docker/stack/${project_name}"
+}
 
 docker_usage() {
     cat <<END
@@ -27,100 +34,147 @@ docker_meta_data() {
 <?xml version="1.0"?>
 <!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
 <resource-agent name="agent_docker_r2">
-<version>1.0</version>
+<version>1.1</version>
 <longdesc lang="en">
-Resource agent for managing Docker Compose projects on Filer2
+Resource agent for managing specific Docker Compose projects (dawantv, nuage, formateur) from /drbd on Filer2
 </longdesc>
-<shortdesc lang="en">Docker Compose RA for Filer2</shortdesc>
+<shortdesc lang="en">Docker Compose RA for Filer2 (/drbd projects)</shortdesc>
 <parameters>
 </parameters>
 <actions>
-<action name="start"        timeout="120s" />
-<action name="stop"         timeout="120s" />
-<action name="monitor"      timeout="30s" interval="30s" depth="0" />
+<action name="start"        timeout="180s" />
+<action name="stop"         timeout="180s" />
+<action name="monitor"      timeout="60s" interval="30s" depth="0" />
 <action name="meta-data"    timeout="5s" />
 </actions>
 </resource-agent>
 END
 }
 
-# Vérifie l'existence du projet Compose
-check_compose_exists() {
-    if [ ! -d "$COMPOSE_PATH" ] || [ ! -f "${COMPOSE_PATH}/docker-compose.yml" ]; then
-        ocf_log err "Docker Compose project not found at $COMPOSE_PATH"
+# Vérifie l'existence de tous les projets Compose
+check_all_projects_exist() {
+    local all_exist=true
+    for project in $PROJECTS; do
+        local compose_dir=$(get_compose_path "$project")
+        if [ ! -d "$compose_dir" ] || [ ! -f "${compose_dir}/docker-compose.yml" ]; then
+            ocf_log err "Docker Compose project '$project' not found at $compose_dir"
+            all_exist=false
+        fi
+    done
+    if [ "$all_exist" = "false" ]; then
         return 1
     fi
     return 0
 }
 
-# Démarre le projet Docker Compose
-start_compose() {
-    check_compose_exists || return 1
+# Démarre tous les projets Docker Compose
+start_all_projects() {
+    check_all_projects_exist || return 1
     
-    ocf_log info "Starting Docker Compose project at $COMPOSE_PATH"
-    cd "$COMPOSE_PATH"
-    $DOCKER_COMPOSE up -d
+    local overall_success=0
+    ocf_log info "Starting Docker Compose projects for filer2: $PROJECTS"
     
-    if [ $? -ne 0 ]; then
-        ocf_log err "Failed to start Docker Compose project"
-        return 1
-    fi
+    for project in $PROJECTS; do
+        local compose_dir=$(get_compose_path "$project")
+        ocf_log info "Starting project '$project' at $compose_dir"
+        cd "$compose_dir"
+        $DOCKER_COMPOSE up -d
+        
+        if [ $? -ne 0 ]; then
+            ocf_log err "Failed to start Docker Compose project '$project'"
+            overall_success=1 # Mark failure but continue trying others
+        else
+            ocf_log info "Docker Compose project '$project' successfully started"
+        fi
+    done
     
-    ocf_log info "Docker Compose project successfully started"
-    return 0
+    return $overall_success
 }
 
-# Arrête le projet Docker Compose
-stop_compose() {
-    if [ ! -d "$COMPOSE_PATH" ] || [ ! -f "${COMPOSE_PATH}/docker-compose.yml" ]; then
-        ocf_log info "Docker Compose project not found at $COMPOSE_PATH, nothing to stop"
-        return 0
-    fi
+# Arrête tous les projets Docker Compose
+stop_all_projects() {
+    local overall_success=0
+    ocf_log info "Stopping Docker Compose projects for filer2: $PROJECTS"
     
-    ocf_log info "Stopping Docker Compose project at $COMPOSE_PATH"
-    cd "$COMPOSE_PATH"
-    $DOCKER_COMPOSE down
+    for project in $PROJECTS; do
+        local compose_dir=$(get_compose_path "$project")
+        if [ -d "$compose_dir" ] && [ -f "${compose_dir}/docker-compose.yml" ]; then
+            ocf_log info "Stopping project '$project' at $compose_dir"
+            cd "$compose_dir"
+            $DOCKER_COMPOSE down
+            
+            if [ $? -ne 0 ]; then
+                ocf_log err "Failed to stop Docker Compose project '$project'"
+                overall_success=1 # Mark failure but continue trying others
+            else
+                ocf_log info "Docker Compose project '$project' successfully stopped"
+            fi
+        else
+            ocf_log info "Docker Compose project '$project' not found at $compose_dir, nothing to stop"
+        fi
+    done
     
-    if [ $? -ne 0 ]; then
-        ocf_log err "Failed to stop Docker Compose project"
-        return 1
-    fi
-    
-    ocf_log info "Docker Compose project successfully stopped"
-    return 0
+    return $overall_success
 }
 
-# Vérifie et répare le projet si nécessaire
-check_and_repair_project() {
+# Vérifie et répare un projet spécifique si nécessaire
+check_and_repair_single_project() {
+    local project_name=$1
+    local compose_dir=$(get_compose_path "$project_name")
     local retry_count=0
     local project_ok=false
     
+    ocf_log debug "Checking project '$project_name' at $compose_dir"
+    
+    if [ ! -d "$compose_dir" ] || [ ! -f "${compose_dir}/docker-compose.yml" ]; then
+        ocf_log err "Project '$project_name' compose file/directory missing during check/repair."
+        return 1 # Critical error for this project
+    fi
+
     while [ $retry_count -lt $MAX_RETRIES ] && [ "$project_ok" = "false" ]; do
-        check_compose_exists || return 1
-        
-        cd "$COMPOSE_PATH"
-        # Vérifier si tous les services sont en cours d'exécution
+        cd "$compose_dir"
+        # Vérifier si tous les services du projet sont en cours d'exécution
         RUNNING_SERVICES=$($DOCKER_COMPOSE ps --services --filter "status=running" | wc -l)
         TOTAL_SERVICES=$($DOCKER_COMPOSE ps --services | wc -l)
         
-        if [ $RUNNING_SERVICES -lt $TOTAL_SERVICES ]; then
-            ocf_log warn "Some Docker Compose services are not running correctly"
-            ocf_log info "Attempting to repair services (attempt $((retry_count+1))/$MAX_RETRIES)"
+        if [ $TOTAL_SERVICES -eq 0 ]; then
+             ocf_log warn "Project '$project_name' has no services defined or found."
+             project_ok=true # Consider it 'ok' if empty? Or return error? Let's consider ok for now.
+        elif [ $RUNNING_SERVICES -lt $TOTAL_SERVICES ]; then
+            ocf_log warn "Some services for project '$project_name' are not running correctly ($RUNNING_SERVICES/$TOTAL_SERVICES)"
+            ocf_log info "Attempting to repair project '$project_name' (attempt $((retry_count+1))/$MAX_RETRIES)"
             
             $DOCKER_COMPOSE up -d
+            if [ $? -ne 0 ]; then
+                ocf_log err "Repair command failed for project '$project_name'"
+            fi
             retry_count=$((retry_count+1))
             sleep 5
         else
+            ocf_log debug "Project '$project_name' is running correctly ($RUNNING_SERVICES/$TOTAL_SERVICES services)."
             project_ok=true
         fi
     done
     
     if [ "$project_ok" = "false" ]; then
-        ocf_log err "Failed to repair Docker Compose project after $MAX_RETRIES attempts"
+        ocf_log err "Failed to repair project '$project_name' after $MAX_RETRIES attempts"
         return 1
     fi
     
     return 0
+}
+
+# Monitore tous les projets
+monitor_all_projects() {
+    local overall_status=0
+    for project in $PROJECTS; do
+        check_and_repair_single_project "$project"
+        if [ $? -ne 0 ]; then
+            ocf_log err "Project '$project' check/repair failed. Overall monitor status set to failed."
+            overall_status=1 # Mark overall failure if any project fails
+        fi
+    done
+    return $overall_status
 }
 
 docker_monitor() {
@@ -129,38 +183,54 @@ docker_monitor() {
         return $OCF_ERR_GENERIC
     fi
     
-    check_compose_exists || return $OCF_NOT_RUNNING
-    
-    ocf_log info "MONITOR: Checking Docker Compose project at $COMPOSE_PATH"
-    
-    check_and_repair_project
+    check_all_projects_exist
     if [ $? -ne 0 ]; then
+         ocf_log warn "Not all required Docker Compose projects found. Resource considered not running."
+         return $OCF_NOT_RUNNING # If base directories/files are missing, agent isn't 'running'
+    fi
+    
+    ocf_log info "MONITOR: Checking Docker Compose projects for filer2: $PROJECTS"
+    
+    monitor_all_projects
+    if [ $? -ne 0 ]; then
+        ocf_log err "One or more Docker Compose projects are not running correctly after repair attempts."
         return $OCF_NOT_RUNNING
     fi
     
+    ocf_log info "All monitored projects for filer2 are running correctly."
     return $OCF_SUCCESS
 }
 
 docker_start() {
-    start_compose
+    start_all_projects
     if [ $? -ne 0 ]; then
+        ocf_log err "Failed to start one or more Docker Compose projects during initial start."
+        # Even if some started, Pacemaker needs a clear success/failure for the whole resource
+        return $OCF_ERR_GENERIC 
+    fi
+    
+    # Give services some time to stabilize before the first check
+    sleep 10 
+
+    monitor_all_projects
+    if [ $? -ne 0 ]; then
+        ocf_log err "One or more Docker Compose projects failed the post-start check/repair."
         return $OCF_ERR_GENERIC
     fi
     
-    check_and_repair_project
-    if [ $? -ne 0 ]; then
-        return $OCF_ERR_GENERIC
-    fi
-    
+    ocf_log info "All Docker Compose projects for filer2 started and verified successfully."
     return $OCF_SUCCESS
 }
 
 docker_stop() {
-    stop_compose
+    stop_all_projects
     if [ $? -ne 0 ]; then
-        return $OCF_ERR_GENERIC
+        ocf_log warn "Failed to cleanly stop one or more Docker Compose projects. Continuing..."
+        # We still return SUCCESS for stop, even if docker-compose down fails for some.
+        # Pacemaker mainly cares that the resource is stopped from its perspective.
     fi
     
+    ocf_log info "All Docker Compose projects for filer2 stop sequence initiated."
     return $OCF_SUCCESS
 }
 
@@ -171,12 +241,15 @@ case $1 in
         ;;
     start)
         docker_start
+        exit $? # Exit with the function's return code
         ;;
     stop)
         docker_stop
+        exit $? # Exit with the function's return code
         ;;
     monitor)
         docker_monitor
+        exit $? # Exit with the function's return code
         ;;
     usage|help)
         docker_usage

@@ -1,17 +1,8 @@
-services:
-  jehannorg:
-    container_name: jehannorg
-    image: nginx:latest
-    restart: unless-stopped
-    ports:
-      - "8085:80"
-    volumes:
-      - type: bind
-        source: ../volumes
-        target: /usr/share/nginx/html
-    networks:
-      - jehannorg-network
+version: '3.8'
 
-networks:
-  jehannorg-network:
-    driver: bridge 
+services:
+  jehannorg_service:
+    image: busybox:latest
+    container_name: jehannorg_container
+    command: ["tail", "-f", "/dev/null"] # Garde le conteneur actif
+    restart: unless-stopped
