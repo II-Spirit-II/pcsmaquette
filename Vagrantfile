@@ -11,22 +11,21 @@ Vagrant.configure("2") do |config|
   end
 
   # Configuration réseau commune
-  config.vm.network "private_network", type: "dhcp"  # Pour l'interface de management
+  # commenté pour utiliser uniquement le réseau privé statique ci-dessous pour la communication hôte-VM et inter-VM
+  # config.vm.network "private_network", type: "dhcp"
 
   # Configuration du répertoire drbd (remplace compose)
   # Assurez-vous que le répertoire 'drbd' existe localement à la racine du projet Vagrant
   config.vm.synced_folder "drbd", "/drbd",
-    owner: "root", # Ajustez si nécessaire selon l'utilisation dans les conteneurs
-    group: "root", # Ajustez si nécessaire
-    mount_options: ["dmode=775,fmode=664"], # Permissions potentiellement plus ouvertes pour drbd
+    owner: "root", # Peut rester root ou être l'UID/GID ci-dessous
+    group: "root", # Peut rester root ou être l'UID/GID ci-dessous
+    mount_options: ["dmode=775,fmode=664", "uid=999", "gid=999"], # AJOUT DE UID/GID
     create: true
 
   # Node 2
   config.vm.define "filer2" do |node2|
     node2.vm.hostname = "filer2"
-    node2.vm.network "private_network", ip: "192.168.56.102", 
-      virtualbox__intnet: true,
-      name: "cluster_net"
+    node2.vm.network "private_network", ip: "192.168.56.102"
     
     node2.vm.provision "shell", inline: <<-SHELL
       apt-get update
@@ -73,8 +72,27 @@ Vagrant.configure("2") do |config|
     node2.vm.provision "shell", inline: "sudo cp /tmp/corosync.conf /etc/corosync/corosync.conf"
     
     node2.vm.provision "shell", path: "scripts/setup_cluster.sh"
+
+    # Provisionnement des permissions pour les volumes Docker spécifiques à filer2
+    node2.vm.provision "shell", name: "Set Docker Volume Permissions for Filer2", inline: <<-SHELL
+      echo "Applying specific permissions for Docker volumes on Filer2..."
+      
+      # Pour MariaDB (projet nuage)
+      echo "Setting permissions for Nuage MariaDB data..."
+      mkdir -p /drbd/nuage/docker/volumes/mariadb_data
+      sudo chown -R 999:999 /drbd/nuage/docker/volumes/mariadb_data
+      sudo chmod -R u+rwx /drbd/nuage/docker/volumes/mariadb_data
+      
+      # Pour Nextcloud app data (projet nuage)
+      echo "Setting permissions for Nuage Nextcloud app data..."
+      mkdir -p /drbd/nuage/docker/volumes/nextcloud_app_data
+      sudo chown -R 33:33 /drbd/nuage/docker/volumes/nextcloud_app_data # UID 33 pour www-data
+      sudo chmod -R u+rwx,g+rwx /drbd/nuage/docker/volumes/nextcloud_app_data
+      
+      echo "Filer2 Docker volume permissions applied."
+    SHELL
+    
     node2.vm.provision "shell", inline: <<-SHELL
-      # Démarrer les services après configuration
       systemctl start corosync pacemaker
       systemctl enable corosync pacemaker
     SHELL
@@ -83,9 +101,7 @@ Vagrant.configure("2") do |config|
   # Node 1 (configuré en dernier)
   config.vm.define "filer1" do |node1|
     node1.vm.hostname = "filer1"
-    node1.vm.network "private_network", ip: "192.168.56.101",
-      virtualbox__intnet: true,
-      name: "cluster_net"
+    node1.vm.network "private_network", ip: "192.168.56.101"
     
     node1.vm.provision "shell", inline: <<-SHELL
       apt-get update
@@ -132,6 +148,26 @@ Vagrant.configure("2") do |config|
     node1.vm.provision "shell", inline: "sudo cp /tmp/corosync.conf /etc/corosync/corosync.conf"
     
     node1.vm.provision "shell", path: "scripts/setup_cluster.sh"
+
+    # Provisionnement des permissions pour les volumes Docker spécifiques à filer1
+    node1.vm.provision "shell", name: "Set Docker Volume Permissions for Filer1", inline: <<-SHELL
+      echo "Applying specific permissions for Docker volumes on Filer1..."
+      
+      # Pour MariaDB du projet dawanorg (r1)
+      echo "Setting permissions for DawanOrg MariaDB data..."
+      mkdir -p /drbd/dawanorg/docker/volumes/mariadb_data 
+      sudo chown -R 999:999 /drbd/dawanorg/docker/volumes/mariadb_data
+      sudo chmod -R u+rwx /drbd/dawanorg/docker/volumes/mariadb_data
+      
+      # Ajoutez ici d'autres chown/chmod pour les volumes des projets sur filer1 si nécessaire
+      # Exemple pour jehannorg (en supposant qu'il utilise aussi MariaDB avec uid 999)
+      # mkdir -p /drbd/jehannorg/docker/volumes/mariadb_data 
+      # sudo chown -R 999:999 /drbd/jehannorg/docker/volumes/mariadb_data
+      # sudo chmod -R u+rwx /drbd/jehannorg/docker/volumes/mariadb_data
+
+      echo "Filer1 Docker volume permissions applied."
+    SHELL
+    
     node1.vm.provision "shell", inline: <<-SHELL
       systemctl start corosync pacemaker
       systemctl enable corosync pacemaker

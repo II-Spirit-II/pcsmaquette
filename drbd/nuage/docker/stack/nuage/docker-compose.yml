@@ -1,8 +1,47 @@
 version: '3.8'
 
+# Les volumes nommés sont supprimés d'ici, nous utilisons des bind mounts.
+
 services:
-  nuage_service:
-    image: busybox:latest
-    container_name: nuage
-    command: ["tail", "-f", "/dev/null"] # Garde le conteneur actif
-    restart: unless-stopped
+  db:
+    image: mariadb:10.6
+    container_name: nuage_mariadb_db # Nom de conteneur ajouté
+    restart: always
+    command: --transaction-isolation=READ-COMMITTED --log-bin=binlog --binlog-format=ROW
+    volumes:
+      # Chemin relatif: ../../volumes/mariadb_data -> /drbd/nuage/docker/volumes/mariadb_data sur la VM
+      - ../../volumes/mariadb_data:/var/lib/mysql 
+    environment:
+      MYSQL_ROOT_PASSWORD: "CHANGEME_db_root_password" # IMPORTANT: À CHANGER
+      MYSQL_PASSWORD: "CHANGEME_nextcloud_db_password"    # IMPORTANT: À CHANGER
+      MYSQL_DATABASE: "nextcloud"
+      MYSQL_USER: "nextcloud"
+    healthcheck: # Healthcheck ajouté pour MariaDB
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost", "-u$$MYSQL_USER", "-p$$MYSQL_PASSWORD"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s # Laisse du temps pour l'initialisation
+
+  app:
+    image: nextcloud
+    container_name: nuage_nextcloud_app # Nom de conteneur ajouté
+    restart: always
+    ports:
+      - "8081:80" # Changé le port hôte pour éviter conflit potentiel avec dawanorg_nginx sur 8080
+    links:
+      - db
+    volumes:
+      # Chemin relatif: ../../volumes/nextcloud_app_data -> /drbd/nuage/docker/volumes/nextcloud_app_data sur la VM
+      - ../../volumes/nextcloud_app_data:/var/www/html
+    environment:
+      MYSQL_PASSWORD: "CHANGEME_nextcloud_db_password"    # IMPORTANT: Doit correspondre à celui du service DB
+      MYSQL_DATABASE: "nextcloud"
+      MYSQL_USER: "nextcloud"
+      MYSQL_HOST: "db"
+    healthcheck: # Healthcheck basique pour Nextcloud (vérifie si le serveur web répond)
+      test: ["CMD-SHELL", "curl -f http://localhost/status.php || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s # Nextcloud peut être long à démarrer la première fois
